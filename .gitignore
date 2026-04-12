@@ -1,0 +1,20 @@
+# Dependencies (Never push these!)
+node_modules/
+__pycache__/
+env/
+venv/
+.env
+
+# MacOS/Windows hidden files
+.DS_Store
+Thumbs.db
+
+# Build folders
+dist/
+build/
+
+# VS Code specific
+.vscode/
+
+# Tooling
+.claude/
