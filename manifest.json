@@ -1,0 +1,24 @@
+{
+  "name": "HZ Fitness",
+  "short_name": "hz.fit",
+  "description": "Personal fitness tracker — weights, cardio, workouts",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1C1109",
+  "theme_color": "#1C1109",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
