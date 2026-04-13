@@ -18,3 +18,5 @@ build/
 
 # Tooling
 .claude/
+
+.wrangler/
