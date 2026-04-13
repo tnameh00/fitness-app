@@ -143,6 +143,18 @@
     ::-webkit-scrollbar{width:3px}
     ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
 
+    /* ai buttons */
+    .ai-btn{background:var(--ink-soft);border:1px solid var(--border2);border-radius:var(--r);padding:12px 14px;cursor:pointer;transition:all .15s;text-align:left;width:100%}
+    .ai-btn:active{transform:scale(.97);opacity:.85}
+    .ai-btn:hover{border-color:var(--brown);background:rgba(139,69,19,.15)}
+    .ai-btn.loading{opacity:.6;pointer-events:none}
+    .ai-btn-icon{font-size:16px;color:var(--brown);margin-bottom:6px;line-height:1}
+    .ai-btn-label{font-family:"JetBrains Mono",monospace;font-size:12px;font-weight:700;color:var(--parchment);letter-spacing:.5px}
+    .ai-btn-sub{font-size:10px;color:var(--faint);margin-top:2px}
+    .ai-btn.done{border-color:var(--green)}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+    .ai-thinking{animation:pulse 1.2s ease-in-out infinite;color:var(--faint);font-size:11px;font-family:"Libre Baskerville",serif;font-style:italic}
+
     /* setup */
     #setup-screen{position:fixed;inset:0;background:var(--ink);z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:calc(var(--safe-top) + 32px) 24px calc(var(--safe-bottom) + 32px);overflow-y:auto}
     .setup-logo{font-family:'JetBrains Mono',monospace;font-size:28px;font-weight:700;margin-bottom:4px;color:var(--parchment)}
@@ -237,6 +249,41 @@
         </div>
       </div>
 
+      <div class="sec-label">AI COACH</div>
+      <div class="card" id="ai-card">
+        <div class="card-body">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+            <button class="ai-btn" id="btn-brief" onclick="runAI('brief')">
+              <div class="ai-btn-icon">◉</div>
+              <div class="ai-btn-label">Today's Brief</div>
+              <div class="ai-btn-sub">where you stand</div>
+            </button>
+            <button class="ai-btn" id="btn-rescue" onclick="runAI('meal_rescue')">
+              <div class="ai-btn-icon">⬡</div>
+              <div class="ai-btn-label">Meal Rescue</div>
+              <div class="ai-btn-sub">what to eat next</div>
+            </button>
+          </div>
+          <button class="ai-btn ai-btn-wide" id="btn-workout" onclick="runAI('workout')">
+            <div style="display:flex;align-items:center;gap:10px">
+              <span class="ai-btn-icon">▲</span>
+              <span><div class="ai-btn-label">Workout Now?</div><div class="ai-btn-sub">should I train today</div></span>
+            </div>
+          </button>
+          <div id="ai-response" style="display:none">
+            <div style="height:1px;background:var(--border);margin:12px 0"></div>
+            <div id="ai-response-type" style="font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--faint);margin-bottom:8px"></div>
+            <div id="ai-response-text" style="font-size:13px;line-height:1.8;color:var(--parchment);font-family:'Libre Baskerville',serif"></div>
+            <div id="ai-meal-input" style="display:none;margin-top:12px">
+              <div style="display:flex;gap:8px">
+                <input type="text" id="meal-msg" placeholder="e.g. had McD burger for lunch..." style="flex:1;font-size:13px"/>
+                <button class="btn btn-green" style="width:auto;padding:10px 14px;font-size:10px" onclick="runAI('meal_rescue')">Ask</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div class="sec-label">QUICK LOG — CALORIES</div>
       <div class="card">
         <div class="card-body">
@@ -311,10 +358,15 @@
         </div>
       </div>
 
+      <div class="sec-label">BODY COMPOSITION</div>
+      <div class="card" id="body-comp-section">
+        <div class="empty"><p>Import Renpho CSV to see body composition trends.</p></div>
+      </div>
+
       <div class="sec-label">IMPORT FROM RENPHO</div>
       <div style="padding:0 14px 8px">
         <label class="btn-import">↑ Import Renpho CSV<input type="file" accept=".csv" style="display:none" onchange="importRenpho(this)"/></label>
-        <div style="font-size:10px;color:var(--faint);text-align:center;margin-top:6px;font-family:'Libre Baskerville',serif;font-style:italic">Renpho → Me → Export Data</div>
+        <div style="font-size:10px;color:var(--faint);text-align:center;margin-top:6px;font-family:'Libre Baskerville',serif;font-style:italic">Renpho → Me → Export Data · all 14 metrics stored</div>
       </div>
 
       <div class="sec-label">HISTORY</div>
@@ -416,6 +468,8 @@
     <div class="form-group" style="margin-bottom:10px"><label>GitHub username</label><input type="text" id="cfg-user" placeholder="yourusername"/></div>
     <div class="form-group" style="margin-bottom:10px"><label>Repo name</label><input type="text" id="cfg-repo" placeholder="my-data"/></div>
     <div class="form-group" style="margin-bottom:16px"><label>Personal access token (repo scope)</label><input type="password" id="cfg-token" placeholder="ghp_..."/></div>
+    <div style="font-size:9px;letter-spacing:1.5px;color:var(--faint);text-transform:uppercase;margin-bottom:8px">AI Coach</div>
+    <div class="form-group" style="margin-bottom:16px"><label>Worker URL</label><input type="text" id="cfg-worker" placeholder="https://hzfit-worker.xxx.workers.dev"/></div>
     <div style="font-size:9px;letter-spacing:1.5px;color:var(--faint);text-transform:uppercase;margin-bottom:8px">Profile</div>
     <div class="form-row">
       <div class="form-group"><label>Weight unit</label><select id="cfg-wunit"><option value="lbs">lbs</option><option value="kg">kg</option></select></div>
@@ -449,7 +503,11 @@ function calcBMR(p){
   const w=p.wunit==='lbs'?p.weight*0.453592:p.weight;
   return p.sex==='male'?10*w+6.25*p.heightCm-5*p.age+5:10*w+6.25*p.heightCm-5*p.age-161;
 }
-function calcTDEE(p){return Math.round(calcBMR(p)*p.activity)}
+function calcTDEE(p){
+  // Prefer scale-measured BMR from Renpho if available
+  if(p.scaleBMR&&p.scaleBMR>1000) return Math.round(p.scaleBMR*p.activity);
+  return Math.round(calcBMR(p)*p.activity);
+}
 function calcTarget(p){return calcTDEE(p)-(p.deficitPerDay||500)}
 function calcProteinTarget(p){
   const lbs=p.wunit==='lbs'?p.weight:p.weight*2.205;
@@ -792,18 +850,158 @@ function importRenpho(input){
   const file=input.files[0];if(!file)return;
   const r=new FileReader();
   r.onload=ev=>{
-    const lines=ev.target.result.split('\n');let count=0;
+    const lines=ev.target.result.split('\n');
+    let weightCount=0,compCount=0,headers=null;
+
     lines.forEach(line=>{
-      const cols=line.split(',');
-      const dateRaw=cols[0]?.trim();const lbs=parseFloat(cols[1]);const kg=parseFloat(cols[2]);
-      if(!dateRaw||isNaN(lbs)&&isNaN(kg))return;
-      const date=normDate(dateRaw);if(!date)return;
-      if(!getEntries().find(en=>en.type==='weight'&&en.date===date)){
-        const val=!isNaN(lbs)?lbs:kg;addEntry({type:'weight',date,value:val,unit:!isNaN(lbs)?'lbs':'kg',time:'morning',source:'renpho'});count++;
+      const raw=line.trim();if(!raw)return;
+      // Parse tab-separated (Renpho uses tabs)
+      const cols=raw.split('\t').map(s=>s.trim());
+      if(cols.length<2)return;
+
+      // Detect header row
+      if(cols[0].toLowerCase().includes('time')||cols[0].toLowerCase().includes('measurement')){
+        headers=cols.map(h=>h.toLowerCase());return;
+      }
+
+      // Parse date from first column — format: "04/08/2026, 07:00:27"
+      const dateRaw=cols[0];
+      const date=normDate(dateRaw);
+      if(!date)return;
+
+      const existing=getEntries();
+
+      // ── Weight entry ──
+      const weightVal=parseFloat(cols[1]);
+      if(!isNaN(weightVal)&&weightVal>0){
+        const unit=headers?( headers[1].includes('lb')?'lbs':headers[1].includes('kg')?'kg':'lbs' ):'lbs';
+        if(!existing.find(en=>en.type==='weight'&&en.date===date)){
+          addEntry({type:'weight',date,value:weightVal,unit,time:'morning',source:'renpho'});
+          weightCount++;
+        }
+      }
+
+      // ── Body composition entry (all remaining fields) ──
+      if(headers&&!existing.find(en=>en.type==='body_composition'&&en.date===date)){
+        const get=(keywords)=>{
+          const idx=headers.findIndex(h=>keywords.some(k=>h.includes(k)));
+          return idx>=0?parseFloat(cols[idx]):null;
+        };
+        const getString=(keywords)=>{
+          const idx=headers.findIndex(h=>keywords.some(k=>h.includes(k)));
+          return idx>=0?cols[idx]:null;
+        };
+
+        const comp={
+          type:'body_composition',
+          date,
+          source:'renpho',
+          timestamp:cols[0], // full datetime
+
+          // Body composition
+          weight:      parseFloat(cols[1])||null,
+          weight_unit: headers?( headers[1].includes('lb')?'lbs':headers[1].includes('kg')?'kg':'lbs' ):'lbs',
+          bmi:         get(['bmi']),
+          body_fat_pct:get(['body fat','fat(%']),
+          subcutaneous_fat_pct: get(['subcutaneous']),
+          visceral_fat:get(['visceral']),
+
+          // Muscle & bone
+          fat_free_weight: get(['fat-free','fat free']),
+          skeletal_muscle_pct: get(['skeletal muscle(%','skeletal muscle (%']),
+          muscle_mass:  get(['muscle mass']),
+          bone_mass:    get(['bone mass']),
+
+          // Metabolic
+          bmr:          get(['bmr']),
+          metabolic_age:get(['metabolic age']),
+          protein_pct:  get(['protein(%','protein (%']),
+
+          // Hydration
+          body_water_pct: get(['body water','water(%']),
+        };
+
+        // Strip nulls
+        Object.keys(comp).forEach(k=>{ if(comp[k]===null||comp[k]===undefined||isNaN(comp[k]))delete comp[k]; });
+        if(Object.keys(comp).length>4){
+          addEntry(comp);compCount++;
+        }
       }
     });
-    toast('Imported '+count+' entries','success');renderWeightTab();input.value='';
+
+    // After import: update TDEE from latest BMR if available
+    updateTDEEFromRenpho();
+
+    toast(`Imported ${weightCount} weight + ${compCount} body composition entries`,'success');
+    renderWeightTab();renderBodyComp();input.value='';
   };r.readAsText(file);
+}
+
+function updateTDEEFromRenpho(){
+  // Use the actual BMR from the scale instead of formula — more accurate
+  const comps=byType('body_composition').sort((a,b)=>b.date.localeCompare(a.date));
+  if(!comps.length||!comps[0].bmr)return;
+  const p=getProfile();if(!p)return;
+  const scaleBMR=comps[0].bmr;
+  // Store scale BMR and update TDEE calculation base
+  p.scaleBMR=scaleBMR;
+  DB.set('profile',p);
+}
+
+function getEffectiveTDEE(p){
+  // Prefer scale BMR if available (more accurate than formula)
+  if(p.scaleBMR&&p.scaleBMR>1000){
+    return Math.round(p.scaleBMR*p.activity);
+  }
+  return calcTDEE(p);
+}
+
+function renderBodyComp(){
+  const el=document.getElementById('body-comp-section');
+  if(!el)return;
+  const comps=byType('body_composition').sort((a,b)=>b.date.localeCompare(a.date));
+  if(!comps.length){el.innerHTML='<div class="empty"><p>Import Renpho CSV to see body composition trends.</p></div>';return}
+
+  const latest=comps[0];
+  const prev=comps.find(c=>c.date!==latest.date);
+
+  function delta(key){
+    if(!prev||prev[key]==null||latest[key]==null)return'';
+    const d=(latest[key]-prev[key]);
+    const better=key==='body_fat_pct'||key==='visceral_fat'||key==='bmi'||key==='metabolic_age';
+    const improved=better?d<0:d>0;
+    const sign=d>0?'+':'';
+    return`<span style="font-size:10px;color:${improved?'var(--green)':'var(--red)'};margin-left:4px">${sign}${d.toFixed(1)}</span>`;
+  }
+
+  const metrics=[
+    {key:'body_fat_pct',   label:'Body fat',    suffix:'%',  note:'lower is better'},
+    {key:'visceral_fat',   label:'Visceral fat',suffix:'',   note:'target <10'},
+    {key:'muscle_mass',    label:'Muscle mass', suffix:' lb',note:'preserve this'},
+    {key:'skeletal_muscle_pct',label:'Skeletal muscle',suffix:'%',note:'higher is better'},
+    {key:'bmr',            label:'BMR',         suffix:' kcal',note:'your resting burn'},
+    {key:'metabolic_age',  label:'Metabolic age',suffix:' yrs',note:''},
+    {key:'body_water_pct', label:'Body water',  suffix:'%',  note:'hydration signal'},
+    {key:'bone_mass',      label:'Bone mass',   suffix:' lb',note:'should stay stable'},
+    {key:'protein_pct',    label:'Protein %',   suffix:'%',  note:'body protein store'},
+    {key:'bmi',            label:'BMI',         suffix:'',   note:''},
+  ];
+
+  const used=metrics.filter(m=>latest[m.key]!=null);
+  el.innerHTML=`
+    <div class="card-hd"><span class="card-title">Latest · ${fmtDate(latest.date)}</span><span class="card-meta">${comps.length} scans</span></div>
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--border)">
+      ${used.map(m=>`
+        <div style="background:var(--ink-mid);padding:12px 14px">
+          <div style="font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--faint);margin-bottom:4px">${m.label}</div>
+          <div style="font-family:'Libre Baskerville',serif;font-size:22px;line-height:1">
+            ${latest[m.key]}${m.suffix}${delta(m.key)}
+          </div>
+          ${m.note?`<div style="font-size:9px;color:var(--muted);margin-top:2px">${m.note}</div>`:''}
+        </div>`).join('')}
+    </div>
+    ${latest.bmr?`<div style="padding:10px 14px;font-size:10px;color:var(--green);border-top:1px solid var(--border)">Scale BMR ${latest.bmr} kcal · TDEE updated to ${Math.round(latest.bmr*(getProfile()?.activity||1.55))} cal</div>`:''}
+  `;
 }
 function importMFP(input){
   const file=input.files[0];if(!file)return;
@@ -843,6 +1041,7 @@ async function syncToGitHub(){
       push(p,'health/weights.json',build('weight')),
       push(p,'health/workouts.json',build('workout')),
       push(p,'health/nutrition.json',build('nutrition',{tdee:calcTDEE(p),target_calories:calcTarget(p),protein_target:calcProteinTarget(p)})),
+      push(p,'health/body-composition.json',build('body_composition',{source:'renpho',fields:['weight','bmi','body_fat_pct','subcutaneous_fat_pct','visceral_fat','fat_free_weight','skeletal_muscle_pct','muscle_mass','bone_mass','bmr','metabolic_age','protein_pct','body_water_pct']})),
     ]);
     btn.textContent='✓ synced';btn.className='sync-btn synced';toast('Synced to GitHub','success');
     setTimeout(()=>{btn.textContent='↑ sync';btn.className='sync-btn'},3000);
@@ -867,12 +1066,16 @@ function openSettings(){
   document.getElementById('cfg-token').value=p.ghToken||'';
   document.getElementById('cfg-wunit').value=p.wunit||'lbs';
   document.getElementById('cfg-activity').value=p.activity||'1.55';
+  document.getElementById('cfg-worker').value=DB.get('worker_url','')||'';
   openModal('settings-modal');
 }
 function saveSettings(){
   const p=getProfile()||{};
   Object.assign(p,{ghUser:document.getElementById('cfg-user').value.trim(),ghRepo:document.getElementById('cfg-repo').value.trim()||'my-data',ghToken:document.getElementById('cfg-token').value.trim(),wunit:document.getElementById('cfg-wunit').value,activity:parseFloat(document.getElementById('cfg-activity').value)});
-  DB.set('profile',p);closeModal('settings-modal');toast('Saved','success');renderToday();
+  DB.set('profile',p);
+  const workerUrl=document.getElementById('cfg-worker').value.trim();
+  if(workerUrl) DB.set('worker_url',workerUrl);
+  closeModal('settings-modal');toast('Saved','success');renderToday();
 }
 function resetSetup(){DB.set('setup_done',false);closeModal('settings-modal');document.getElementById('setup-screen').style.display='flex';document.getElementById('app').style.display='none';}
 
@@ -884,7 +1087,7 @@ function switchTab(tab,btn){
   document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('panel-'+tab).classList.add('active');btn.classList.add('active');
-  if(tab==='weight')renderWeightTab();
+  if(tab==='weight'){renderWeightTab();renderBodyComp();}
   if(tab==='nutrition')renderNutritionTab();
   if(tab==='workouts')renderWorkoutTab();
   if(tab==='history')renderHistory();
@@ -907,7 +1110,92 @@ function initApp(){
   if(p){document.getElementById('q-wunit').value=p.wunit||'lbs';document.getElementById('w-unit').value=p.wunit||'lbs';}
   renderToday();
 }
+
+// ── AI COACH ──
+const WORKER_URL = 'https://hzfit-worker.YOUR_SUBDOMAIN.workers.dev';
+
+function buildContext(){
+  const p=getProfile();
+  const all=getEntries();
+  const today=todayStr();
+  const tdee=p?calcTDEE(p):2000;
+  const target=p?calcTarget(p):1500;
+  const nt=all.find(e=>e.type==='nutrition'&&e.date===today);
+  const calsToday=nt?nt.calories:0;
+  const wd=getWeekData();
+  const dow=new Date().getDay();
+  const daysLeft=dow===0?0:7-dow;
+  const weights=byType('weight').sort((a,b)=>a.date.localeCompare(b.date));
+  let weightTrend='no data';
+  if(weights.length>=2){
+    const recent=weights.filter(e=>daysAgo(e.date)<=14);
+    if(recent.length>=2){
+      const delta=(recent[recent.length-1].value-recent[0].value).toFixed(1);
+      weightTrend=(delta<=0?'down ':'up ')+Math.abs(delta)+' '+recent[0].unit+' over '+recent.length+' days';
+    }
+  }
+  const workouts=byType('workout');
+  let lastWorkout='no recent workouts';
+  if(workouts.length){
+    const w=workouts[0];
+    const d=daysAgo(w.date);
+    lastWorkout=(d===0?'today':d===1?'yesterday':d+' days ago')+' — '+w.name;
+  }
+  const active=new Set(all.map(e=>e.date));
+  let streak=0,ds=new Date();
+  while(active.has(ds.toISOString().slice(0,10))){streak++;ds.setDate(ds.getDate()-1);}
+  const comp=byType('body_composition').sort((a,b)=>b.date.localeCompare(a.date));
+  const lc=comp.length?comp[0]:null;
+  return{tdee,target_calories:target,calories_today:calsToday,week_deficit:wd.total,week_target:p?(p.deficitPerDay||500)*7:3500,days_left_in_week:daysLeft,weight_trend:weightTrend,last_workout:lastWorkout,streak,body_fat_pct:lc?.body_fat_pct||null,muscle_mass:lc?.muscle_mass||null};
+}
+
+async function runAI(type){
+  const p=getProfile();
+  if(!p){toast('Complete setup first','error');return;}
+  const workerUrl=DB.get('worker_url','') || WORKER_URL;
+  if(workerUrl.includes('YOUR_SUBDOMAIN')){
+    toast('Set Worker URL in Settings','error');
+    openSettings();return;
+  }
+  const mealInput=document.getElementById('ai-meal-input');
+  const mealMsg=document.getElementById('meal-msg');
+  if(type==='meal_rescue'&&mealInput.style.display==='none'){
+    document.getElementById('ai-response').style.display='block';
+    mealInput.style.display='block';
+    document.getElementById('ai-response-text').innerHTML='<span class="ai-thinking">Tell me what you ate and I will figure out your best options...</span>';
+    document.getElementById('ai-response-type').textContent='meal rescue';
+    mealMsg.focus();
+    return;
+  }
+  const btnMap={brief:'btn-brief',meal_rescue:'btn-rescue',workout:'btn-workout'};
+  const btn=document.getElementById(btnMap[type]);
+  const responseEl=document.getElementById('ai-response');
+  const responseText=document.getElementById('ai-response-text');
+  const responseType=document.getElementById('ai-response-type');
+  btn.classList.add('loading');
+  responseEl.style.display='block';
+  responseText.innerHTML='<span class="ai-thinking">thinking...</span>';
+  responseType.textContent={brief:"today's brief",meal_rescue:'meal rescue',workout:'workout advice'}[type];
+  const ctx=buildContext();
+  if(type==='meal_rescue'&&mealMsg?.value) ctx.user_message=mealMsg.value;
+  try{
+    const res=await fetch(workerUrl+'/ai',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type,context:ctx})});
+    if(!res.ok){const e=await res.json();throw new Error(e.error||'Worker error');}
+    const data=await res.json();
+    responseText.textContent=data.response||'No response';
+    btn.classList.remove('loading');
+    btn.classList.add('done');
+    setTimeout(()=>btn.classList.remove('done'),3000);
+    if(type==='meal_rescue') mealInput.style.display='block';
+  }catch(err){
+    responseText.innerHTML='<span style="color:var(--red)">'+(err.message||'Something went wrong')+'</span>';
+    btn.classList.remove('loading');
+    toast('AI error: '+err.message,'error');
+  }
+}
+
 function init(){
+
   if(DB.get('setup_done',false)){
     document.getElementById('setup-screen').style.display='none';
     document.getElementById('app').style.display='flex';
