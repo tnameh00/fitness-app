@@ -14,10 +14,13 @@
   <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet"/>
   <style>
     :root {
-      --ink:#1C1109;--ink-mid:#2A1A0D;--ink-soft:#3D2B1A;--muted:#6B4C35;--faint:#9C7A63;
-      --parchment:#F5F0E8;--cream:#FAF7F2;--brown:#8B4513;--brown2:#A0522D;
-      --green:#1A6B4A;--green2:#2D8A62;--amber:#C8860A;--red:#B33A2A;
-      --border:rgba(139,69,19,0.15);--border2:rgba(139,69,19,0.28);
+      --ink:#1C1109;--ink-mid:#2A1A0D;--ink-soft:#3D2B1A;
+      --muted:#C4A882;--faint:#A68B6A;
+      --parchment:#F7F2EA;--cream:#FAF7F2;
+      --brown:#C4611A;--brown2:#D4732A;
+      --green:#22A066;--green2:#2DBF7A;
+      --amber:#E09A10;--red:#D94030;
+      --border:rgba(196,136,82,0.18);--border2:rgba(196,136,82,0.32);
       --safe-top:env(safe-area-inset-top,0px);--safe-bottom:env(safe-area-inset-bottom,0px);
       --r:10px;
     }
@@ -30,7 +33,7 @@
     .app-title{font-family:'Libre Baskerville',serif;font-size:17px}
     .app-title span{color:var(--brown)}
     .header-right{display:flex;gap:8px;align-items:center}
-    .sync-btn{background:none;border:1px solid var(--border2);color:var(--faint);font-family:'JetBrains Mono',monospace;font-size:10px;padding:5px 10px;border-radius:20px;cursor:pointer;transition:all .2s}
+    .sync-btn{background:none;border:1px solid var(--border2);color:var(--faint);font-family:'JetBrains Mono',monospace;font-size:11px;padding:5px 10px;border-radius:20px;cursor:pointer;transition:all .2s}
     .sync-btn:active{transform:scale(.95)}
     .sync-btn.syncing{color:var(--amber);border-color:var(--amber)}
     .sync-btn.synced{color:var(--green);border-color:var(--green)}
@@ -39,35 +42,35 @@
 
     /* tabs */
     .tab-bar{display:flex;background:var(--ink);border-bottom:1px solid var(--border);flex-shrink:0;padding:0 2px}
-    .tab-btn{flex:1;background:none;border:none;border-bottom:2px solid transparent;color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.6px;text-transform:uppercase;padding:11px 2px 9px;cursor:pointer;transition:all .15s}
+    .tab-btn{flex:1;background:none;border:none;border-bottom:2px solid transparent;color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.4px;text-transform:uppercase;padding:11px 2px 9px;cursor:pointer;transition:all .15s}
     .tab-btn.active{color:var(--parchment);border-bottom-color:var(--brown)}
 
     /* scroll */
     .tab-content{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:calc(var(--safe-bottom) + 24px)}
     .tab-panel{display:none}
     .tab-panel.active{display:block}
-    .sec-label{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);padding:16px 18px 8px;border-bottom:1px solid var(--border)}
+    .sec-label{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);padding:16px 18px 8px;border-bottom:1px solid var(--border)}
 
     /* cards */
     .card{margin:10px 14px;background:var(--ink-mid);border-radius:var(--r);border:1px solid var(--border2);overflow:hidden}
     .card-hd{display:flex;align-items:center;justify-content:space-between;padding:11px 14px 9px;border-bottom:1px solid var(--border)}
-    .card-title{font-family:'Libre Baskerville',serif;font-size:13px}
-    .card-meta{font-size:10px;color:var(--faint)}
+    .card-title{font-family:'Libre Baskerville',serif;font-size:15px}
+    .card-meta{font-size:12px;color:var(--faint)}
     .card-body{padding:12px 14px 14px}
 
     /* deficit hero */
     .deficit-hero{margin:10px 14px;background:var(--ink-mid);border-radius:var(--r);border:1px solid var(--border2);padding:16px 14px}
     .deficit-row{display:flex;align-items:baseline;gap:8px;margin-bottom:3px}
     .deficit-num{font-family:'Libre Baskerville',serif;font-size:44px;line-height:1}
-    .deficit-unit{font-size:11px;color:var(--faint)}
-    .deficit-label{font-size:10px;color:var(--muted);letter-spacing:1px;margin-bottom:12px}
+    .deficit-unit{font-size:13px;color:var(--faint)}
+    .deficit-label{font-size:12px;color:var(--muted);letter-spacing:.5px;margin-bottom:12px}
     .prog-track{height:6px;background:var(--ink-soft);border-radius:3px;overflow:hidden;margin-bottom:5px}
     .prog-fill{height:100%;border-radius:3px;background:var(--green);transition:width .6s ease}
-    .prog-labels{display:flex;justify-content:space-between;font-size:9px;color:var(--faint)}
+    .prog-labels{display:flex;justify-content:space-between;font-size:11px;color:var(--faint)}
     .week-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);margin-top:14px;border-radius:8px;overflow:hidden;border:1px solid var(--border)}
     .wstat{background:var(--ink-mid);padding:10px 8px;text-align:center}
     .wstat-val{font-family:'Libre Baskerville',serif;font-size:18px;line-height:1;margin-bottom:3px}
-    .wstat-lbl{font-size:9px;color:var(--faint);letter-spacing:1px;text-transform:uppercase}
+    .wstat-lbl{font-size:11px;color:var(--faint);letter-spacing:.8px;text-transform:uppercase}
 
     /* chart */
     .chart-wrap{padding:12px 14px;position:relative}
@@ -76,7 +79,7 @@
     .conf-dots{display:flex;gap:3px}
     .conf-dot{width:7px;height:7px;border-radius:50%;background:var(--ink-soft)}
     .conf-dot.on{background:var(--brown)}
-    .conf-text{font-size:10px;color:var(--faint);font-style:italic;font-family:'Libre Baskerville',serif}
+    .conf-text{font-size:12px;color:var(--faint);font-style:italic;font-family:'Libre Baskerville',serif}
 
     /* nudge */
     .nudge{margin:10px 14px 0;background:rgba(200,134,10,.1);border:1px solid rgba(200,134,10,.28);border-radius:var(--r);padding:10px 14px;font-size:11px;color:var(--amber);line-height:1.5;display:none}
@@ -85,25 +88,25 @@
     /* forms */
     .form-row{display:flex;gap:8px;margin-bottom:10px}
     .form-group{flex:1;display:flex;flex-direction:column;gap:4px}
-    label{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--faint)}
-    input,select,textarea{background:rgba(255,255,255,.05);border:1px solid var(--border2);border-radius:6px;color:var(--parchment);font-family:'JetBrains Mono',monospace;font-size:14px;padding:10px 12px;width:100%;outline:none;transition:border-color .15s;-webkit-appearance:none}
+    label{font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--faint)}
+    input,select,textarea{background:rgba(255,255,255,.05);border:1px solid var(--border2);border-radius:6px;color:var(--parchment);font-family:'JetBrains Mono',monospace;font-size:15px;padding:10px 12px;width:100%;outline:none;transition:border-color .15s;-webkit-appearance:none}
     input:focus,select:focus,textarea:focus{border-color:var(--brown)}
     select option{background:var(--ink-mid)}
     .input-lg{font-size:28px;padding:12px;text-align:center}
     .macro-row{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px}
     .macro-cell{display:flex;flex-direction:column;gap:3px}
-    .macro-lbl{font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--faint);text-align:center}
+    .macro-lbl{font-size:11px;letter-spacing:.8px;text-transform:uppercase;color:var(--faint);text-align:center}
     .macro-input{background:rgba(255,255,255,.05);border:1px solid var(--border2);border-radius:6px;color:var(--parchment);font-family:'JetBrains Mono',monospace;font-size:16px;padding:8px 4px;width:100%;outline:none;text-align:center;-webkit-appearance:none}
     .macro-input:focus{border-color:var(--brown)}
-    .macro-hint{font-size:9px;color:var(--faint);text-align:center}
+    .macro-hint{font-size:11px;color:var(--faint);text-align:center}
     .protein-row{display:flex;align-items:center;gap:8px;margin-top:8px}
-    .protein-lbl{font-size:10px;color:var(--faint);white-space:nowrap}
+    .protein-lbl{font-size:12px;color:var(--faint);white-space:nowrap}
     .protein-track{flex:1;height:5px;background:var(--ink-soft);border-radius:3px;overflow:hidden}
     .protein-fill{height:100%;border-radius:3px;background:var(--brown);transition:width .4s}
     .protein-pct{font-size:10px;color:var(--faint);min-width:32px;text-align:right}
 
     /* buttons */
-    .btn{display:block;width:100%;padding:13px;border:none;border-radius:6px;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;transition:all .15s}
+    .btn{display:block;width:100%;padding:13px;border:none;border-radius:6px;font-family:'JetBrains Mono',monospace;font-size:13px;letter-spacing:.8px;text-transform:uppercase;cursor:pointer;transition:all .15s}
     .btn:active{transform:scale(.98);opacity:.85}
     .btn-primary{background:var(--brown);color:var(--parchment)}
     .btn-green{background:var(--green);color:var(--parchment)}
@@ -114,10 +117,10 @@
     .log-entry{padding:11px 14px;border-bottom:1px solid var(--border)}
     .log-entry:last-child{border-bottom:none}
     .log-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:3px}
-    .log-type{font-size:9px;letter-spacing:1px;text-transform:uppercase}
+    .log-type{font-size:11px;letter-spacing:.8px;text-transform:uppercase}
     .t-weight{color:var(--amber)}.t-nutrition{color:var(--green2)}.t-workout{color:var(--brown2)}.t-cardio{color:var(--green)}.t-note{color:var(--faint)}
-    .log-date{font-size:10px;color:var(--faint)}
-    .log-summary{font-size:13px;line-height:1.4}
+    .log-date{font-size:12px;color:var(--faint)}
+    .log-summary{font-size:15px;line-height:1.5}
     .log-sub{font-size:11px;color:var(--faint);margin-top:2px;font-style:italic;font-family:'Libre Baskerville',serif}
 
     /* streak dots */
@@ -149,8 +152,8 @@
     .ai-btn:hover{border-color:var(--brown);background:rgba(139,69,19,.15)}
     .ai-btn.loading{opacity:.6;pointer-events:none}
     .ai-btn-icon{font-size:16px;color:var(--brown);margin-bottom:6px;line-height:1}
-    .ai-btn-label{font-family:"JetBrains Mono",monospace;font-size:12px;font-weight:700;color:var(--parchment);letter-spacing:.5px}
-    .ai-btn-sub{font-size:10px;color:var(--faint);margin-top:2px}
+    .ai-btn-label{font-family:"JetBrains Mono",monospace;font-size:14px;font-weight:700;color:var(--parchment);letter-spacing:.3px}
+    .ai-btn-sub{font-size:12px;color:var(--faint);margin-top:3px}
     .ai-btn.done{border-color:var(--green)}
     @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
     .ai-thinking{animation:pulse 1.2s ease-in-out infinite;color:var(--faint);font-size:11px;font-family:"Libre Baskerville",serif;font-style:italic}
@@ -1207,4 +1210,3 @@ if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.ser
 </script>
 </body>
 </html>
-
