@@ -167,6 +167,8 @@
     .fast-window-badge.partial{background:rgba(240,168,32,.15);color:var(--amber)}
     .fast-window-badge.short{background:rgba(245,239,230,.08);color:var(--text-3)}
 
+    select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%239C8974' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:36px !important}
+
     /* streak dots */
     .streak-dots{display:flex;flex-wrap:wrap;gap:4px;padding:10px 14px 4px}
     .dot{width:9px;height:9px;border-radius:50%;background:var(--surface-2)}
@@ -531,21 +533,41 @@
       <div class="card">
         <div class="card-body">
           <div class="form-row">
-            <div class="form-group"><label>Date</label><input type="date" id="if-date"/></div>
-            <div class="form-group"><label>Protocol</label>
-              <select id="if-protocol">
-                <option value="16">16:8</option>
-                <option value="18">18:6</option>
-                <option value="20">20:4</option>
-                <option value="custom">Custom</option>
+            <div class="form-group"><label>Protocol ▾</label>
+              <select id="if-protocol" onchange="onProtocolChange()">
+                <option value="16">16:8 — fast 16h</option>
+                <option value="18">18:6 — fast 18h</option>
+                <option value="20">20:4 — fast 20h</option>
+                <option value="23">OMAD — fast 23h</option>
+                <option value="custom">Custom hours...</option>
               </select>
+            </div>
+            <div class="form-group" id="if-custom-group" style="display:none">
+              <label>Custom hours</label>
+              <input type="number" id="if-custom-hrs" inputmode="numeric" placeholder="e.g. 14" min="4" max="23" style="font-size:16px"/>
             </div>
           </div>
           <div class="form-row">
-            <div class="form-group"><label>Fast start time</label><input type="time" id="if-start"/></div>
-            <div class="form-group"><label>Fast end time</label><input type="time" id="if-end"/></div>
+            <div class="form-group">
+              <label>Start date ▾</label>
+              <input type="date" id="if-start-date"/>
+            </div>
+            <div class="form-group">
+              <label>Start time</label>
+              <input type="time" id="if-start" onchange="autoFillEndTime()"/>
+            </div>
           </div>
-          <div style="font-size:13px;color:var(--text-2);margin-bottom:12px;min-height:20px" id="if-calc"></div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>End date ▾</label>
+              <input type="date" id="if-end-date"/>
+            </div>
+            <div class="form-group">
+              <label>End time</label>
+              <input type="time" id="if-end" onchange="updateIfCalc()"/>
+            </div>
+          </div>
+          <div style="font-size:13px;color:var(--text-2);margin-bottom:12px;min-height:20px;line-height:1.5" id="if-calc"></div>
           <button class="btn btn-primary" onclick="saveFast()">Save fasting window</button>
         </div>
       </div>
@@ -554,7 +576,7 @@
       <div class="card">
         <div class="card-body">
           <div class="form-row">
-            <div class="form-group"><label>Default protocol</label>
+            <div class="form-group"><label>Default protocol ▾</label>
               <select id="if-default-protocol" onchange="saveIfSettings()">
                 <option value="16">16:8 (fast 16h, eat 8h)</option>
                 <option value="18">18:6 (fast 18h, eat 6h)</option>
@@ -1350,51 +1372,101 @@ function toggleFast(){
   if(state.active) stopFast(); else startFast();
 }
 
+function onProtocolChange(){
+  const proto=document.getElementById('if-protocol').value;
+  const customGroup=document.getElementById('if-custom-group');
+  if(customGroup) customGroup.style.display=proto==='custom'?'flex':'none';
+  autoFillEndTime();
+}
+
+function getTargetHours(){
+  const proto=document.getElementById('if-protocol')?.value||'16';
+  if(proto==='custom'){
+    const custom=parseFloat(document.getElementById('if-custom-hrs')?.value);
+    return isNaN(custom)?16:custom;
+  }
+  return parseInt(proto)||16;
+}
+
+function autoFillEndTime(){
+  // Given start date + time + protocol, auto-calculate end date + time
+  const startDate=document.getElementById('if-start-date')?.value;
+  const startT=document.getElementById('if-start')?.value;
+  if(!startDate||!startT) return;
+
+  const target=getTargetHours();
+  const [sh,sm]=startT.split(':').map(Number);
+  const startMs=new Date(startDate+'T'+startT+':00').getTime();
+  const endMs=startMs+(target*3600000);
+  const endDt=new Date(endMs);
+
+  const endDate=endDt.toISOString().slice(0,10);
+  const endHH=String(endDt.getHours()).padStart(2,'0');
+  const endMM=String(endDt.getMinutes()).padStart(2,'0');
+
+  const endDateEl=document.getElementById('if-end-date');
+  const endTimeEl=document.getElementById('if-end');
+  if(endDateEl) endDateEl.value=endDate;
+  if(endTimeEl) endTimeEl.value=endHH+':'+endMM;
+
+  updateIfCalc();
+}
+
 function saveFast(){
-  const date=document.getElementById('if-date').value||todayStr();
+  const startDate=document.getElementById('if-start-date').value||todayStr();
+  const endDate=document.getElementById('if-end-date').value||startDate;
   const startT=document.getElementById('if-start').value;
   const endT=document.getElementById('if-end').value;
-  const proto=document.getElementById('if-protocol').value;
   if(!startT||!endT){toast('Enter start and end time','error');return;}
 
-  // Calculate duration
-  const [sh,sm]=startT.split(':').map(Number);
-  const [eh,em]=endT.split(':').map(Number);
-  let diff=(eh*60+em)-(sh*60+sm);
-  if(diff<0)diff+=24*60; // overnight fast
-  const duration=Math.round(diff/6)/10; // to 1dp
-  const target=proto==='custom'?0:parseInt(proto);
+  // Calculate duration using full datetime — handles overnight correctly
+  const startMs=new Date(startDate+'T'+startT+':00').getTime();
+  const endMs=new Date(endDate+'T'+endT+':00').getTime();
+  if(endMs<=startMs){toast('End time must be after start','error');return;}
+  const diffHrs=(endMs-startMs)/3600000;
+  const duration=Math.round(diffHrs*10)/10;
+  const target=getTargetHours();
 
   addEntry({
     type:'fast',
-    date,
+    date:startDate,
+    startDate, endDate,
     startTime:startT,
     endTime:endT,
     duration,
     targetHours:target,
-    metTarget:target>0&&duration>=target
+    metTarget:duration>=target
   });
 
   document.getElementById('if-start').value='';
   document.getElementById('if-end').value='';
+  document.getElementById('if-end-date').value='';
   document.getElementById('if-calc').textContent='';
   toast(duration+'h fast saved','success');
   renderFastingTab(); renderToday();
 }
 
 function updateIfCalc(){
+  const startDate=document.getElementById('if-start-date')?.value;
+  const endDate=document.getElementById('if-end-date')?.value;
   const startT=document.getElementById('if-start')?.value;
   const endT=document.getElementById('if-end')?.value;
   const el=document.getElementById('if-calc');
-  if(!el||!startT||!endT)return;
-  const [sh,sm]=startT.split(':').map(Number);
-  const [eh,em]=endT.split(':').map(Number);
-  let diff=(eh*60+em)-(sh*60+sm);
-  if(diff<0)diff+=24*60;
-  const hrs=Math.round(diff/6)/10;
-  const proto=document.getElementById('if-protocol')?.value;
-  const target=parseInt(proto)||16;
-  el.textContent=hrs+'h fast'+(hrs>=target?' — ✓ hits your target':' — '+Math.round((target-hrs)*10)/10+'h short of target');
+  if(!el) return;
+  if(!startT||!endT||!startDate){el.textContent='';return;}
+
+  const sd=endDate||startDate;
+  const startMs=new Date(startDate+'T'+startT+':00').getTime();
+  const endMs=new Date(sd+'T'+endT+':00').getTime();
+  if(endMs<=startMs){
+    el.textContent='End time must be after start';
+    el.style.color='var(--red)';
+    return;
+  }
+  const hrs=Math.round((endMs-startMs)/360000)/10;
+  const target=getTargetHours();
+  const overnight=endDate&&endDate!==startDate?' (overnight)':'';
+  el.textContent=hrs+'h fast'+overnight+(hrs>=target?' — ✓ hits '+target+'h target':' — '+(Math.round((target-hrs)*10)/10)+'h short of '+target+'h target');
   el.style.color=hrs>=target?'var(--green)':'var(--amber)';
 }
 
@@ -1427,15 +1499,22 @@ function renderFastingTab(){
     }
   }
 
-  // Set date input
-  const dateEl=document.getElementById('if-date');
-  if(dateEl&&!dateEl.value)dateEl.value=todayStr();
+  // Set date inputs
+  const startDateEl=document.getElementById('if-start-date');
+  if(startDateEl&&!startDateEl.value)startDateEl.value=todayStr();
+  const endDateEl=document.getElementById('if-end-date');
+  if(endDateEl&&!endDateEl.value)endDateEl.value=todayStr();
 
-  // Attach calc listeners
-  ['if-start','if-end','if-protocol'].forEach(id=>{
+  // Attach calc listeners (once)
+  ['if-start','if-end','if-end-date','if-custom-hrs'].forEach(id=>{
     const el=document.getElementById(id);
     if(el&&!el._ifcalc){el.addEventListener('change',updateIfCalc);el._ifcalc=true;}
   });
+  const protocolEl=document.getElementById('if-protocol');
+  if(protocolEl&&!protocolEl._ifcalc){
+    protocolEl.addEventListener('change',onProtocolChange);
+    protocolEl._ifcalc=true;
+  }
 
   // History
   const fasts=byType('fast').slice(0,20);
