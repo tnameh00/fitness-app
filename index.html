@@ -299,6 +299,28 @@
         </div>
       </div>
 
+      <!-- Cumulative deficit summary -->
+      <div class="card" id="cumulative-card">
+        <div class="card-hd"><span class="card-title">Cumulative deficit</span><span class="card-meta" id="cum-period-label">loading...</span></div>
+        <div class="card-body" style="padding:0">
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border)">
+            <div class="wstat" id="cum-week-cell">
+              <div class="wstat-val" id="cum-week-lbs">—</div>
+              <div class="wstat-lbl">this week</div>
+            </div>
+            <div class="wstat" id="cum-month-cell">
+              <div class="wstat-val" id="cum-month-lbs">—</div>
+              <div class="wstat-lbl">this month</div>
+            </div>
+            <div class="wstat" id="cum-total-cell">
+              <div class="wstat-val" id="cum-total-lbs">—</div>
+              <div class="wstat-lbl">all time</div>
+            </div>
+          </div>
+          <div style="padding:10px 14px;border-top:1px solid var(--border);font-size:13px;color:var(--text-2);line-height:1.6" id="cum-insight"></div>
+        </div>
+      </div>
+
       <div id="fast-today-card" style="margin:10px 14px;display:none">
         <div class="card">
           <div class="card-body" style="display:flex;align-items:center;justify-content:space-between;gap:12px">
@@ -504,6 +526,22 @@
           <button class="btn btn-primary" onclick="saveWorkout()">Save activity</button>
         </div>
       </div>
+      <div class="sec-label">7-DAY BURN CHART</div>
+      <div class="card">
+        <div class="card-hd">
+          <span class="card-title">Calories burned</span>
+          <span class="card-meta" id="activity-week-total">— cal this week</span>
+        </div>
+        <div style="padding:14px">
+          <canvas id="activity-chart" height="120"></canvas>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);border-top:1px solid var(--border)">
+          <div class="wstat"><div class="wstat-val" id="act-total-cal">—</div><div class="wstat-lbl">cal burned</div></div>
+          <div class="wstat"><div class="wstat-val" id="act-total-min">—</div><div class="wstat-lbl">minutes</div></div>
+          <div class="wstat"><div class="wstat-val" id="act-active-days">—</div><div class="wstat-lbl">active days</div></div>
+        </div>
+      </div>
+
       <div class="sec-label">RECENT ACTIVITY</div>
       <div id="workout-list"></div>
     </div>
@@ -774,16 +812,42 @@ function onWoTypeChange(v){
 }
 
 // ── DEFICIT ENGINE ──
-function getWeekData(){
-  const p=getProfile();if(!p)return{total:0,days:0,avg:0};
+// Core deficit engine — single source of truth for a given date
+function getDayDeficit(dateStr, all, tdee){
+  const n=all.find(e=>e.type==='nutrition'&&e.date===dateStr);
+  if(!n)return null;
+  const burned=all.filter(e=>e.type==='workout'&&e.date===dateStr)
+    .reduce((s,e)=>s+(e.calsBurned||0),0);
+  return tdee - n.calories + burned;
+}
+
+function getPeriodData(days){
+  const p=getProfile();if(!p)return{total:0,loggedDays:0,avgDeficit:0,totalBurned:0,activeDays:0};
   const tdee=calcTDEE(p);const all=getEntries();
-  let total=0,days=0;
-  for(let i=0;i<7;i++){
+  let total=0,loggedDays=0,totalBurned=0,activeDays=0;
+  for(let i=0;i<days;i++){
     const d=dateNDaysAgo(i);
-    const n=all.find(e=>e.type==='nutrition'&&e.date===d);
-    if(n){total+=tdee-n.calories;days++;}
+    const deficit=getDayDeficit(d,all,tdee);
+    if(deficit!==null){total+=deficit;loggedDays++;}
+    const dayBurned=all.filter(e=>e.type==='workout'&&e.date===d)
+      .reduce((s,e)=>s+(e.calsBurned||0),0);
+    totalBurned+=dayBurned;
+    if(all.some(e=>e.type==='workout'&&e.date===d)) activeDays++;
   }
-  return{total,days,avg:days?Math.round(total/days):0};
+  return{
+    total:Math.round(total),
+    loggedDays,
+    avgDeficit:loggedDays?Math.round(total/loggedDays):0,
+    projectedLbs:Math.round(total/3500*10)/10,
+    totalBurned:Math.round(totalBurned),
+    activeDays
+  };
+}
+
+// Keep getWeekData as alias for backward compat
+function getWeekData(){
+  const d=getPeriodData(7);
+  return{total:d.total,days:d.loggedDays,avg:d.avgDeficit};
 }
 
 // ── RENDER TODAY ──
@@ -799,9 +863,11 @@ function renderToday(){
   if(daw>=2){nudge.textContent=`No weigh-in for ${daw} day${daw>1?'s':''}. Consistency builds the trend.`;nudge.classList.add('show');}
   else nudge.classList.remove('show');
 
-  // Nutrition today
+  // Nutrition + activity today
   const nt=all.find(e=>e.type==='nutrition'&&e.date===today);
-  const deficit=nt?tdee-nt.calories:null;
+  const todayBurned=all.filter(e=>e.type==='workout'&&e.date===today)
+    .reduce((s,e)=>s+(e.calsBurned||0),0);
+  const deficit=nt?(tdee-nt.calories+todayBurned):null;
 
   // Hero
   const he=document.getElementById('hero-deficit');
@@ -809,11 +875,17 @@ function renderToday(){
   if(deficit!==null){
     he.textContent=deficit>=0?'+'+deficit.toLocaleString():deficit.toLocaleString();
     he.style.color=deficit>=0?'var(--text-1)':'var(--red)';
-    if(deficit>=p.deficitPerDay) hl.textContent='on target — great work';
-    else if(deficit>=0) hl.textContent=(p.deficitPerDay-deficit)+' cal short of your '+p.deficitPerDay+' target';
-    else hl.textContent='calorie surplus today';
+    const parts=[];
+    if(nt) parts.push(nt.calories+' cal eaten');
+    if(todayBurned) parts.push(todayBurned+' cal burned');
+    const detail=parts.length?parts.join(' · ') + ' · TDEE '+tdee:'TDEE '+tdee;
+    if(deficit>=p.deficitPerDay) hl.textContent='on target · '+detail;
+    else if(deficit>=0) hl.textContent=(p.deficitPerDay-deficit)+' cal short · '+detail;
+    else hl.textContent='surplus today · '+detail;
   } else {
-    he.textContent='—';hl.textContent='TDEE: '+tdee+' cal · log calories to see deficit';
+    he.textContent='—';
+    const burnTxt=todayBurned?' · '+todayBurned+' cal burned':'';
+    hl.textContent='TDEE: '+tdee+' cal'+burnTxt+' · log calories to see deficit';
   }
 
   // Protein quick bar
@@ -853,6 +925,8 @@ function renderToday(){
   const todayE=all.filter(e=>e.date===today);
   const tl=document.getElementById('today-list');
   tl.innerHTML=todayE.length?todayE.map(eHTML).join(''):'<div class="empty"><p>Nothing logged yet.<br>Start with calories + weight above.</p></div>';
+
+  renderCumulative();
 }
 
 // ── RENDER WEIGHT ──
@@ -981,7 +1055,73 @@ function renderNutritionTab(){
 function renderWorkoutTab(){
   const entries=byType('workout').slice(0,20);
   const list=document.getElementById('workout-list');
-  list.innerHTML=entries.length?entries.map(e=>`<div class="log-entry"><div class="log-top"><span class="log-type ${['walk','run','cardio'].includes(e.workoutType)?'t-cardio':'t-workout'}">${e.workoutType||'workout'}</span><span class="log-date">${fmtDate(e.date)}</span></div><div class="log-summary">${e.name}${e.duration?' · '+e.duration+' min':''}${e.calsBurned?' · ~'+e.calsBurned+' cal':''}</div>${e.distance?`<div class="log-sub">${e.distance}</div>`:''}</div>`).join(''):'<div class="empty"><p>No activities logged yet.</p></div>';
+  list.innerHTML=entries.length?entries.map(e=>`<div class="log-entry"><div class="log-entry-inner"><div class="log-entry-content"><div class="log-top"><span class="log-type ${['walk','run','cardio','sports'].includes(e.workoutType)?'t-cardio':'t-workout'}">${e.workoutType||'workout'}</span><span class="log-date">${fmtDate(e.date)}</span></div><div class="log-summary">${e.name}${e.duration?' · '+e.duration+' min':''}${e.calsBurned?' · ~'+e.calsBurned+' cal':''}</div>${e.distance?`<div class="log-sub">${e.distance}</div>`:''}</div><button class="delete-btn" onclick="deleteEntry('${e.id}')">×</button></div></div>`).join(''):'<div class="empty"><p>No activities logged yet.</p></div>';
+  drawActivityChart();
+}
+
+function drawActivityChart(){
+  const canvas=document.getElementById('activity-chart');
+  if(!canvas)return;
+  const ctx=canvas.getContext('2d');
+  const W=canvas.parentElement.clientWidth-28;
+  canvas.width=W;canvas.height=120;
+  ctx.clearRect(0,0,W,120);
+
+  const all=getEntries();
+  // Build 7-day burn data
+  const days=[];
+  for(let i=6;i>=0;i--){
+    const d=dateNDaysAgo(i);
+    const burned=all.filter(e=>e.type==='workout'&&e.date===d)
+      .reduce((s,e)=>s+(e.calsBurned||0),0);
+    const label=new Date(d+'T12:00:00').toLocaleDateString('en-US',{weekday:'short'});
+    days.push({date:d,burned,label});
+  }
+
+  const maxBurn=Math.max(...days.map(d=>d.burned),100);
+  const barW=Math.floor((W-40)/7)-4;
+  const totalCal=days.reduce((s,d)=>s+d.burned,0);
+  const totalMin=all.filter(e=>e.type==='workout'&&daysAgo(e.date)<7)
+    .reduce((s,e)=>s+(e.duration||0),0);
+  const activeDays=days.filter(d=>d.burned>0).length;
+
+  // Update summary stats
+  const twEl=document.getElementById('activity-week-total');
+  if(twEl)twEl.textContent=totalCal.toLocaleString()+' cal this week';
+  const actCalEl=document.getElementById('act-total-cal');
+  if(actCalEl)actCalEl.textContent=totalCal.toLocaleString();
+  const actMinEl=document.getElementById('act-total-min');
+  if(actMinEl)actMinEl.textContent=totalMin;
+  const actDaysEl=document.getElementById('act-active-days');
+  if(actDaysEl)actDaysEl.textContent=activeDays+'/7';
+
+  // Draw bars
+  days.forEach((d,i)=>{
+    const x=20+i*(barW+4);
+    const barH=d.burned>0?Math.max(4,Math.round((d.burned/maxBurn)*88)):2;
+    const y=100-barH;
+    const isToday=d.date===todayStr();
+
+    // Bar
+    ctx.fillStyle=isToday?'#E07B2E':d.burned>0?'rgba(224,123,46,0.55)':'rgba(245,239,230,0.06)';
+    ctx.beginPath();
+    ctx.roundRect(x,y,barW,barH,3);
+    ctx.fill();
+
+    // Cal label on top of bar
+    if(d.burned>0){
+      ctx.fillStyle=isToday?'#F5EFE6':'rgba(245,239,230,0.55)';
+      ctx.font='bold 10px -apple-system,sans-serif';
+      ctx.textAlign='center';
+      ctx.fillText(d.burned,x+barW/2,y-4);
+    }
+
+    // Day label below
+    ctx.fillStyle=isToday?'#E07B2E':'rgba(156,137,116,0.8)';
+    ctx.font=(isToday?'bold ':'')+'11px -apple-system,sans-serif';
+    ctx.textAlign='center';
+    ctx.fillText(d.label,x+barW/2,116);
+  });
 }
 
 // ── RENDER HISTORY ──
@@ -1273,7 +1413,7 @@ function switchTab(tab,btn){
   if(tab==='weight'){renderWeightTab();renderBodyComp();}
   if(tab==='fasting'){renderFastingTab();}
   if(tab==='nutrition')renderNutritionTab();
-  if(tab==='workouts')renderWorkoutTab();
+  if(tab==='workouts'){renderWorkoutTab();}
   if(tab==='history')renderHistory();
 }
 
@@ -1620,6 +1760,64 @@ function renderFastToday(){
       if(btn){btn.textContent='Start fast';btn.className='btn btn-primary';btn.style.background='';}
       if(fill)fill.style.width='0%';
     }
+  }
+}
+
+// ── CUMULATIVE DEFICIT ──
+function renderCumulative(){
+  const p=getProfile();if(!p)return;
+  const all=getEntries();
+  const tdee=calcTDEE(p);
+
+  // Week (7 days)
+  const week=getPeriodData(7);
+  // Month (30 days)
+  const month=getPeriodData(30);
+  // All time
+  const firstEntry=all.filter(e=>e.type==='nutrition').sort((a,b)=>a.date.localeCompare(b.date))[0];
+  const totalDays=firstEntry?Math.ceil((new Date()-new Date(firstEntry.date+'T12:00:00'))/86400000)+1:7;
+  const allTime=getPeriodData(totalDays);
+
+  // Week cell
+  const wLbs=week.projectedLbs;
+  const wEl=document.getElementById('cum-week-lbs');
+  if(wEl){
+    wEl.textContent=(wLbs>0?'+':'')+wLbs+'lb';
+    wEl.style.color=wLbs>0?'var(--green)':wLbs<0?'var(--red)':'var(--text-3)';
+  }
+
+  // Month cell
+  const mLbs=month.projectedLbs;
+  const mEl=document.getElementById('cum-month-lbs');
+  if(mEl){
+    mEl.textContent=(mLbs>0?'+':'')+mLbs+'lb';
+    mEl.style.color=mLbs>0?'var(--green)':mLbs<0?'var(--red)':'var(--text-3)';
+  }
+
+  // All time
+  const tLbs=allTime.projectedLbs;
+  const tEl=document.getElementById('cum-total-lbs');
+  if(tEl){
+    tEl.textContent=(tLbs>0?'+':'')+tLbs+'lb';
+    tEl.style.color=tLbs>0?'var(--green)':tLbs<0?'var(--red)':'var(--text-3)';
+  }
+
+  // Period label
+  const pl=document.getElementById('cum-period-label');
+  if(pl)pl.textContent=allTime.loggedDays+' days logged';
+
+  // Insight
+  const ins=document.getElementById('cum-insight');
+  if(ins){
+    const parts=[];
+    if(week.totalBurned>0) parts.push(week.totalBurned.toLocaleString()+' cal burned from '+week.activeDays+' workout'+( week.activeDays!==1?'s':''));
+    if(month.loggedDays>0){
+      const rate=(month.projectedLbs/Math.max(1,month.loggedDays/7)).toFixed(2);
+      parts.push('avg '+rate+' lb/week over '+month.loggedDays+' logged days');
+    }
+    if(allTime.projectedLbs>0&&allTime.loggedDays>=14)
+      parts.push('total deficit '+allTime.total.toLocaleString()+' cal = ~'+allTime.projectedLbs+'lb');
+    ins.textContent=parts.join(' · ')||'Log calories and activity to see your trend.';
   }
 }
 
