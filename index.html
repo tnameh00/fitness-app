@@ -135,6 +135,38 @@
     .log-summary{font-size:15px;line-height:1.5;color:var(--text-1);font-weight:500}
     .log-sub{font-size:13px;color:var(--text-2);margin-top:3px;line-height:1.5}
 
+    /* delete entry */
+    .log-entry{padding:11px 14px;border-bottom:1px solid var(--border);position:relative;transition:background .15s}
+    .log-entry:last-child{border-bottom:none}
+    .log-entry-inner{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+    .log-entry-content{flex:1;min-width:0}
+    .delete-btn{background:none;border:none;color:var(--text-3);font-size:18px;cursor:pointer;padding:0 0 0 8px;line-height:1;flex-shrink:0;opacity:0;transition:opacity .15s;align-self:center}
+    .log-entry:hover .delete-btn,.log-entry:active .delete-btn{opacity:1}
+    .delete-btn:active{color:var(--red);transform:scale(1.2)}
+
+    /* fasting */
+    .fast-hero{margin:10px 14px;background:var(--surface);border-radius:var(--r);border:1px solid var(--border);overflow:hidden}
+    .fast-status{padding:16px 14px 12px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .fast-time-big{font-family:var(--f-serif);font-size:42px;line-height:1;font-weight:700}
+    .fast-time-big.fasting{color:var(--green)}
+    .fast-time-big.eating{color:var(--amber)}
+    .fast-time-big.idle{color:var(--text-3)}
+    .fast-label{font-size:13px;color:var(--text-2);margin-top:4px;line-height:1.4}
+    .fast-track{height:6px;background:var(--surface-2);border-radius:3px;overflow:hidden;margin:0 14px 14px}
+    .fast-fill{height:100%;border-radius:3px;background:var(--green);transition:width .5s ease}
+    .fast-fill.eating{background:var(--amber)}
+    .fast-actions{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);border-top:1px solid var(--border)}
+    .fast-action-btn{background:var(--surface);border:none;padding:13px 8px;cursor:pointer;font-family:var(--f-sans);font-size:13px;font-weight:600;transition:background .15s}
+    .fast-action-btn:active{background:var(--surface-2)}
+    .fast-action-btn.start{color:var(--green)}
+    .fast-action-btn.stop{color:var(--amber)}
+    .fast-action-btn.disabled{color:var(--text-3);pointer-events:none}
+    .fast-history-row{display:flex;justify-content:space-between;align-items:center;padding:9px 14px;border-top:1px solid var(--border);font-size:13px}
+    .fast-window-badge{display:inline-block;padding:3px 9px;border-radius:10px;font-size:11px;font-weight:600;letter-spacing:.4px}
+    .fast-window-badge.good{background:rgba(61,196,138,.15);color:var(--green)}
+    .fast-window-badge.partial{background:rgba(240,168,32,.15);color:var(--amber)}
+    .fast-window-badge.short{background:rgba(245,239,230,.08);color:var(--text-3)}
+
     /* streak dots */
     .streak-dots{display:flex;flex-wrap:wrap;gap:4px;padding:10px 14px 4px}
     .dot{width:9px;height:9px;border-radius:50%;background:var(--surface-2)}
@@ -238,6 +270,7 @@
     <button class="tab-btn" onclick="switchTab('weight',this)">Weight</button>
     <button class="tab-btn" onclick="switchTab('nutrition',this)">Nutrition</button>
     <button class="tab-btn" onclick="switchTab('workouts',this)">Activity</button>
+    <button class="tab-btn" onclick="switchTab('fasting',this)">Fast</button>
     <button class="tab-btn" onclick="switchTab('history',this)">Log</button>
   </nav>
 
@@ -261,6 +294,22 @@
           <div class="wstat"><div class="wstat-val" id="ws-avg">—</div><div class="wstat-lbl">avg deficit</div></div>
           <div class="wstat"><div class="wstat-val" id="ws-proj">—</div><div class="wstat-lbl">proj lbs/wk</div></div>
           <div class="wstat"><div class="wstat-val" id="ws-prot">—</div><div class="wstat-lbl">protein %</div></div>
+        </div>
+      </div>
+
+      <div id="fast-today-card" style="margin:10px 14px;display:none">
+        <div class="card">
+          <div class="card-body" style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+            <div>
+              <div style="font-size:12px;color:var(--text-2);letter-spacing:.8px;text-transform:uppercase;font-weight:500;margin-bottom:4px">Fasting</div>
+              <div style="font-family:var(--f-serif);font-size:24px;font-weight:700" id="fast-today-time">—</div>
+              <div style="font-size:13px;color:var(--text-2);margin-top:3px" id="fast-today-label">—</div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <button class="btn btn-primary" id="fast-today-btn" style="padding:10px 16px;font-size:13px;white-space:nowrap" onclick="toggleFast()">—</button>
+            </div>
+          </div>
+          <div class="fast-track" style="margin:0 14px 14px"><div class="fast-fill" id="fast-today-fill" style="width:0%"></div></div>
         </div>
       </div>
 
@@ -455,6 +504,73 @@
       </div>
       <div class="sec-label">RECENT ACTIVITY</div>
       <div id="workout-list"></div>
+    </div>
+
+    <!-- FASTING -->
+    <div class="tab-panel" id="panel-fasting">
+      <div class="sec-label">FASTING STATUS</div>
+      <div class="fast-hero">
+        <div class="fast-status">
+          <div>
+            <div class="fast-time-big idle" id="fast-elapsed">—</div>
+            <div class="fast-label" id="fast-label">No active fast</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-family:var(--f-serif);font-size:22px;color:var(--text-1);font-weight:700" id="fast-target-hrs">—</div>
+            <div style="font-size:12px;color:var(--text-2);margin-top:3px">target hours</div>
+          </div>
+        </div>
+        <div class="fast-track"><div class="fast-fill" id="fast-fill" style="width:0%"></div></div>
+        <div class="fast-actions">
+          <button class="fast-action-btn start" id="fast-start-btn" onclick="startFast()">▶ Start fast</button>
+          <button class="fast-action-btn stop disabled" id="fast-stop-btn" onclick="stopFast()">■ End fast</button>
+        </div>
+      </div>
+
+      <div class="sec-label">LOG FASTING WINDOW</div>
+      <div class="card">
+        <div class="card-body">
+          <div class="form-row">
+            <div class="form-group"><label>Date</label><input type="date" id="if-date"/></div>
+            <div class="form-group"><label>Protocol</label>
+              <select id="if-protocol">
+                <option value="16">16:8</option>
+                <option value="18">18:6</option>
+                <option value="20">20:4</option>
+                <option value="custom">Custom</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Fast start time</label><input type="time" id="if-start"/></div>
+            <div class="form-group"><label>Fast end time</label><input type="time" id="if-end"/></div>
+          </div>
+          <div style="font-size:13px;color:var(--text-2);margin-bottom:12px;min-height:20px" id="if-calc"></div>
+          <button class="btn btn-primary" onclick="saveFast()">Save fasting window</button>
+        </div>
+      </div>
+
+      <div class="sec-label">SETTINGS</div>
+      <div class="card">
+        <div class="card-body">
+          <div class="form-row">
+            <div class="form-group"><label>Default protocol</label>
+              <select id="if-default-protocol" onchange="saveIfSettings()">
+                <option value="16">16:8 (fast 16h, eat 8h)</option>
+                <option value="18">18:6 (fast 18h, eat 6h)</option>
+                <option value="20">20:4 (fast 20h, eat 4h)</option>
+                <option value="omad">OMAD (23:1)</option>
+              </select>
+            </div>
+          </div>
+          <div style="font-size:13px;color:var(--text-2);line-height:1.6">
+            Fasting burns through glycogen stores and shifts to fat oxidation after ~12 hours. Your eating window aligns with calorie logging.
+          </div>
+        </div>
+      </div>
+
+      <div class="sec-label">HISTORY</div>
+      <div id="fast-history-list"></div>
     </div>
 
     <!-- HISTORY -->
@@ -859,10 +975,34 @@ function renderHistory(){
 // ── ENTRY HTML ──
 function eHTML(e){
   let badge='',summary='',sub='';
-  if(e.type==='weight'){badge='<span class="log-type t-weight">weight</span>';summary=e.value+' '+e.unit;if(e.note)sub=e.note;}
-  else if(e.type==='nutrition'){badge='<span class="log-type t-nutrition">calories</span>';summary=e.calories+' cal';if(e.protein)sub='P: '+e.protein+'g'+(e.carbs?' · C: '+e.carbs+'g':'')+(e.fat?' · F: '+e.fat+'g':'');}
-  else if(e.type==='workout'){const isC=['walk','run','cardio'].includes(e.workoutType);badge=`<span class="log-type ${isC?'t-cardio':'t-workout'}">${e.workoutType||'workout'}</span>`;summary=e.name+(e.duration?' · '+e.duration+' min':'');if(e.distance)sub=e.distance;}
-  return`<div class="log-entry"><div class="log-top">${badge}<span class="log-date">${fmtDate(e.date)}</span></div><div class="log-summary">${summary}</div>${sub?`<div class="log-sub">${sub}</div>`:''}</div>`;
+  if(e.type==='weight'){
+    badge='<span class="log-type t-weight">weight</span>';
+    summary=e.value+' '+e.unit;
+    if(e.note)sub=e.note;
+  } else if(e.type==='nutrition'){
+    badge='<span class="log-type t-nutrition">calories</span>';
+    summary=e.calories+' cal';
+    if(e.protein)sub='P: '+e.protein+'g'+(e.carbs?' · C: '+e.carbs+'g':'')+(e.fat?' · F: '+e.fat+'g':'');
+  } else if(e.type==='workout'){
+    const isC=['walk','run','cardio','sports'].includes(e.workoutType);
+    badge=`<span class="log-type ${isC?'t-cardio':'t-workout'}">${e.workoutType||'workout'}</span>`;
+    summary=e.name+(e.duration?' · '+e.duration+' min':'')+(e.calsBurned?' · ~'+e.calsBurned+' cal':'');
+    if(e.distance)sub=e.distance;
+  } else if(e.type==='fast'){
+    badge='<span class="log-type" style="color:#3DC48A">fasting</span>';
+    summary=e.duration+'h fast';
+    sub=e.startTime+' → '+e.endTime+(e.metTarget?' · ✓ hit target':'');
+  }
+  return`<div class="log-entry">
+    <div class="log-entry-inner">
+      <div class="log-entry-content">
+        <div class="log-top">${badge}<span class="log-date">${fmtDate(e.date)}</span></div>
+        <div class="log-summary">${summary}</div>
+        ${sub?`<div class="log-sub">${sub}</div>`:''}
+      </div>
+      <button class="delete-btn" onclick="deleteEntry('${e.id}')" title="Delete">×</button>
+    </div>
+  </div>`;
 }
 
 // ── CSV IMPORTS ──
@@ -1061,6 +1201,7 @@ async function syncToGitHub(){
       push(p,'health/weights.json',build('weight')),
       push(p,'health/workouts.json',build('workout')),
       push(p,'health/nutrition.json',build('nutrition',{tdee:calcTDEE(p),target_calories:calcTarget(p),protein_target:calcProteinTarget(p)})),
+      push(p,'health/fasting.json',build('fast',{default_protocol:getIfSettings().protocol})),
       push(p,'health/body-composition.json',build('body_composition',{source:'renpho',fields:['weight','bmi','body_fat_pct','subcutaneous_fat_pct','visceral_fat','fat_free_weight','skeletal_muscle_pct','muscle_mass','bone_mass','bmr','metabolic_age','protein_pct','body_water_pct']})),
     ]);
     btn.textContent='✓ synced';btn.className='sync-btn synced';toast('Synced to GitHub','success');
@@ -1108,6 +1249,7 @@ function switchTab(tab,btn){
   document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('panel-'+tab).classList.add('active');btn.classList.add('active');
   if(tab==='weight'){renderWeightTab();renderBodyComp();}
+  if(tab==='fasting'){renderFastingTab();}
   if(tab==='nutrition')renderNutritionTab();
   if(tab==='workouts')renderWorkoutTab();
   if(tab==='history')renderHistory();
@@ -1129,6 +1271,277 @@ function initApp(){
   const p=getProfile();
   if(p){document.getElementById('q-wunit').value=p.wunit||'lbs';document.getElementById('w-unit').value=p.wunit||'lbs';}
   renderToday();
+  renderFastToday();
+  // Live fast timer — update every minute
+  if(fastTimerInterval) clearInterval(fastTimerInterval);
+  fastTimerInterval = setInterval(()=>{
+    updateFastTimer();
+    renderFastToday();
+  }, 60000);
+}
+
+// ── DELETE ──
+function deleteEntry(id){
+  if(!confirm('Delete this entry?')) return;
+  const arr=getEntries().filter(e=>e.id!==id);
+  setEntries(arr);
+  toast('Entry deleted');
+  // Re-render whichever panels are visible
+  renderToday();
+  const active=document.querySelector('.tab-panel.active');
+  if(active){
+    const id2=active.id;
+    if(id2==='panel-weight')renderWeightTab();
+    if(id2==='panel-nutrition')renderNutritionTab();
+    if(id2==='panel-workouts')renderWorkoutTab();
+    if(id2==='panel-history')renderHistory();
+    if(id2==='panel-fasting')renderFastingTab();
+  }
+}
+
+// ── INTERMITTENT FASTING ──
+function getFastState(){return DB.get('fast_state',{active:false,startTime:null});}
+function getIfSettings(){return DB.get('if_settings',{protocol:'16'});}
+function saveIfSettings(){
+  const proto=document.getElementById('if-default-protocol')?.value||'16';
+  DB.set('if_settings',{protocol:proto});
+  toast('Fasting settings saved','success');
+  renderFastingTab();
+}
+
+function startFast(){
+  const now=new Date().toISOString();
+  DB.set('fast_state',{active:true,startTime:now});
+  toast('Fast started','success');
+  renderFastingTab(); renderFastToday();
+}
+
+function stopFast(){
+  const state=getFastState();
+  if(!state.active)return;
+  const start=new Date(state.startTime);
+  const end=new Date();
+  const diffMs=end-start;
+  const diffHrs=diffMs/3600000;
+  const settings=getIfSettings();
+  const target=parseInt(settings.protocol)||16;
+  const duration=Math.round(diffHrs*10)/10;
+
+  // Save as fast entry
+  addEntry({
+    type:'fast',
+    date:todayStr(),
+    startTime:start.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}),
+    endTime:end.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}),
+    startISO:state.startTime,
+    endISO:end.toISOString(),
+    duration:duration,
+    targetHours:target,
+    metTarget:duration>=target
+  });
+
+  DB.set('fast_state',{active:false,startTime:null});
+  toast(duration+'h fast saved'+(duration>=target?' — target hit!':''),'success');
+  renderFastingTab(); renderFastToday(); renderToday();
+}
+
+function toggleFast(){
+  const state=getFastState();
+  if(state.active) stopFast(); else startFast();
+}
+
+function saveFast(){
+  const date=document.getElementById('if-date').value||todayStr();
+  const startT=document.getElementById('if-start').value;
+  const endT=document.getElementById('if-end').value;
+  const proto=document.getElementById('if-protocol').value;
+  if(!startT||!endT){toast('Enter start and end time','error');return;}
+
+  // Calculate duration
+  const [sh,sm]=startT.split(':').map(Number);
+  const [eh,em]=endT.split(':').map(Number);
+  let diff=(eh*60+em)-(sh*60+sm);
+  if(diff<0)diff+=24*60; // overnight fast
+  const duration=Math.round(diff/6)/10; // to 1dp
+  const target=proto==='custom'?0:parseInt(proto);
+
+  addEntry({
+    type:'fast',
+    date,
+    startTime:startT,
+    endTime:endT,
+    duration,
+    targetHours:target,
+    metTarget:target>0&&duration>=target
+  });
+
+  document.getElementById('if-start').value='';
+  document.getElementById('if-end').value='';
+  document.getElementById('if-calc').textContent='';
+  toast(duration+'h fast saved','success');
+  renderFastingTab(); renderToday();
+}
+
+function updateIfCalc(){
+  const startT=document.getElementById('if-start')?.value;
+  const endT=document.getElementById('if-end')?.value;
+  const el=document.getElementById('if-calc');
+  if(!el||!startT||!endT)return;
+  const [sh,sm]=startT.split(':').map(Number);
+  const [eh,em]=endT.split(':').map(Number);
+  let diff=(eh*60+em)-(sh*60+sm);
+  if(diff<0)diff+=24*60;
+  const hrs=Math.round(diff/6)/10;
+  const proto=document.getElementById('if-protocol')?.value;
+  const target=parseInt(proto)||16;
+  el.textContent=hrs+'h fast'+(hrs>=target?' — ✓ hits your target':' — '+Math.round((target-hrs)*10)/10+'h short of target');
+  el.style.color=hrs>=target?'var(--green)':'var(--amber)';
+}
+
+function renderFastingTab(){
+  const state=getFastState();
+  const settings=getIfSettings();
+  const target=parseInt(settings.protocol)||16;
+
+  // Update default protocol selector
+  const sel=document.getElementById('if-default-protocol');
+  if(sel)sel.value=settings.protocol;
+
+  // Set target display
+  const targetEl=document.getElementById('fast-target-hrs');
+  if(targetEl)targetEl.textContent=target+'h';
+
+  // Update live timer
+  updateFastTimer();
+
+  // Buttons
+  const startBtn=document.getElementById('fast-start-btn');
+  const stopBtn=document.getElementById('fast-stop-btn');
+  if(startBtn&&stopBtn){
+    if(state.active){
+      startBtn.className='fast-action-btn start disabled';
+      stopBtn.className='fast-action-btn stop';
+    } else {
+      startBtn.className='fast-action-btn start';
+      stopBtn.className='fast-action-btn stop disabled';
+    }
+  }
+
+  // Set date input
+  const dateEl=document.getElementById('if-date');
+  if(dateEl&&!dateEl.value)dateEl.value=todayStr();
+
+  // Attach calc listeners
+  ['if-start','if-end','if-protocol'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el&&!el._ifcalc){el.addEventListener('change',updateIfCalc);el._ifcalc=true;}
+  });
+
+  // History
+  const fasts=byType('fast').slice(0,20);
+  const hist=document.getElementById('fast-history-list');
+  if(!hist)return;
+  if(!fasts.length){hist.innerHTML='<div class="empty"><p>No fasting windows logged yet.</p></div>';return;}
+  hist.innerHTML=fasts.map(f=>{
+    const pct=f.targetHours?Math.min(100,Math.round(f.duration/f.targetHours*100)):100;
+    const cls=pct>=100?'good':pct>=75?'partial':'short';
+    const label=pct>=100?f.duration+'h ✓':f.duration+'h';
+    return`<div class="fast-history-row">
+      <div>
+        <div style="font-size:15px;font-weight:500;color:var(--text-1)">${fmtDate(f.date)}</div>
+        <div style="font-size:13px;color:var(--text-2);margin-top:2px">${f.startTime||''}${f.endTime?' → '+f.endTime:''}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <span class="fast-window-badge ${cls}">${label}</span>
+        <button class="delete-btn" style="opacity:1;font-size:16px" onclick="deleteEntry('${f.id}')">×</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+let fastTimerInterval=null;
+function updateFastTimer(){
+  const state=getFastState();
+  const settings=getIfSettings();
+  const target=parseInt(settings.protocol)||16;
+  const elapsed=document.getElementById('fast-elapsed');
+  const label=document.getElementById('fast-label');
+  const fill=document.getElementById('fast-fill');
+  if(!elapsed)return;
+
+  if(!state.active||!state.startTime){
+    elapsed.textContent='—';
+    elapsed.className='fast-time-big idle';
+    if(label)label.textContent='Tap "Start fast" to begin';
+    if(fill)fill.style.width='0%';
+    return;
+  }
+
+  const diffMs=new Date()-new Date(state.startTime);
+  const diffHrs=diffMs/3600000;
+  const h=Math.floor(diffHrs);
+  const m=Math.floor((diffHrs-h)*60);
+  elapsed.textContent=h+'h '+m+'m';
+  elapsed.className='fast-time-big fasting';
+
+  const pct=Math.min(100,diffHrs/target*100);
+  if(fill){
+    fill.style.width=pct+'%';
+    fill.className=diffHrs>=target?'fast-fill good':'fast-fill';
+  }
+
+  if(label){
+    if(diffHrs>=target){
+      label.textContent='Target reached! End fast when ready.';
+      label.style.color='var(--green)';
+    } else {
+      const remaining=target-diffHrs;
+      const rh=Math.floor(remaining);
+      const rm=Math.floor((remaining-rh)*60);
+      label.textContent=rh+'h '+rm+'m until '+target+'h target';
+      label.style.color='var(--text-2)';
+    }
+  }
+}
+
+function renderFastToday(){
+  const state=getFastState();
+  const card=document.getElementById('fast-today-card');
+  const timeEl=document.getElementById('fast-today-time');
+  const labelEl=document.getElementById('fast-today-label');
+  const btn=document.getElementById('fast-today-btn');
+  const fill=document.getElementById('fast-today-fill');
+  const settings=getIfSettings();
+  const target=parseInt(settings.protocol)||16;
+
+  if(!card)return;
+  card.style.display='block';
+
+  if(state.active&&state.startTime){
+    const diffMs=new Date()-new Date(state.startTime);
+    const diffHrs=diffMs/3600000;
+    const h=Math.floor(diffHrs);
+    const m=Math.floor((diffHrs-h)*60);
+    if(timeEl){timeEl.textContent=h+'h '+m+'m';timeEl.style.color='var(--green)';}
+    if(labelEl)labelEl.textContent='Fasting · tap to end';
+    if(btn){btn.textContent='End fast';btn.className='btn btn-primary';btn.style.background='var(--amber)';}
+    const pct=Math.min(100,diffHrs/target*100);
+    if(fill){fill.style.width=pct+'%';fill.className='fast-fill';}
+  } else {
+    // Check if fasted today
+    const todayFast=byType('fast').find(f=>f.date===todayStr());
+    if(todayFast){
+      if(timeEl){timeEl.textContent=todayFast.duration+'h';timeEl.style.color='var(--green)';}
+      if(labelEl)labelEl.textContent='Fast complete today'+(todayFast.metTarget?' · target hit':'');
+      if(btn){btn.textContent='Fast again';btn.className='btn btn-ghost';btn.style.background='';}
+      if(fill){fill.style.width=Math.min(100,todayFast.duration/target*100)+'%';fill.className='fast-fill';}
+    } else {
+      if(timeEl){timeEl.textContent='—';timeEl.style.color='var(--text-3)';}
+      if(labelEl)labelEl.textContent='Not fasting · tap to start';
+      if(btn){btn.textContent='Start fast';btn.className='btn btn-primary';btn.style.background='';}
+      if(fill)fill.style.width='0%';
+    }
+  }
 }
 
 // ── AI COACH ──
