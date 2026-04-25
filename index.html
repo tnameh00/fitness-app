@@ -1664,7 +1664,7 @@ async function push(p,path,content){
 
   const body={
     message:`hz.fit: update ${path}`,
-    content:btoa(unescape(encodeURIComponent(content))),
+    content:(()=>{const bytes=new TextEncoder().encode(content);let bin='';for(const b of bytes)bin+=String.fromCharCode(b);return btoa(bin);})(),
     ...(sha?{sha}:{})
   };
 
@@ -1741,8 +1741,11 @@ async function pullFromGitHub(){
         if(!res.ok) continue; // file doesn't exist yet — skip
 
         const data=await res.json();
-        // GitHub returns base64-encoded content
-        const decoded=decodeURIComponent(escape(atob(data.content.replace(/\n/g,''))));
+        // GitHub returns base64-encoded content — use TextDecoder for mobile Safari compatibility
+        const raw=atob(data.content.replace(/\s/g,''));
+        const bytes=new Uint8Array(raw.length);
+        for(let i=0;i<raw.length;i++) bytes[i]=raw.charCodeAt(i);
+        const decoded=new TextDecoder().decode(bytes);
         const parsed=JSON.parse(decoded);
 
         // Support both array format and {entries:[...]} format
