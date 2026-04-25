@@ -680,7 +680,8 @@
       <button class="btn btn-ghost" style="flex:1" onclick="closeModal('settings-modal')">Cancel</button>
       <button class="btn btn-primary" style="flex:2" onclick="saveSettings()">Save</button>
     </div>
-    <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
+    <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:8px">
+      <button class="btn btn-ghost" id="pull-btn" onclick="pullFromGitHub()" style="font-size:13px;color:var(--green);border-color:rgba(61,196,138,.4)">↓ Pull data from GitHub</button>
       <button class="btn btn-ghost" onclick="resetSetup()" style="font-size:13px;color:var(--red);border-color:rgba(232,80,64,.4)">Re-run setup</button>
     </div>
   </div>
@@ -1398,6 +1399,74 @@ function saveSettings(){
 }
 function resetSetup(){DB.set('setup_done',false);closeModal('settings-modal');document.getElementById('setup-screen').style.display='flex';document.getElementById('app').style.display='none';}
 
+// ── GITHUB PULL ──
+async function pullFromGitHub(){
+  const p=getProfile();
+  if(!p?.ghToken||!p?.ghUser){toast('Set GitHub credentials first','error');return;}
+
+  const btn=document.getElementById('pull-btn');
+  if(btn){btn.textContent='↓ pulling...';btn.style.opacity='0.6';btn.style.pointerEvents='none';}
+
+  const files=[
+    {path:'health/weights.json',    type:'weight'},
+    {path:'health/workouts.json',   type:'workout'},
+    {path:'health/nutrition.json',  type:'nutrition'},
+    {path:'health/body-composition.json', type:'body_composition'},
+    {path:'health/fasting.json',    type:'fast'},
+  ];
+
+  let totalMerged=0;
+  let errors=0;
+
+  try{
+    for(const f of files){
+      try{
+        const url=`https://api.github.com/repos/${p.ghUser}/${p.ghRepo}/contents/${f.path}`;
+        const res=await fetch(url,{headers:{Authorization:`token ${p.ghToken}`,Accept:'application/vnd.github.v3+json'}});
+        if(!res.ok) continue; // file doesn't exist yet — skip
+
+        const data=await res.json();
+        // GitHub returns base64-encoded content
+        const decoded=decodeURIComponent(escape(atob(data.content.replace(/\n/g,''))));
+        const parsed=JSON.parse(decoded);
+
+        // Support both array format and {entries:[...]} format
+        const incoming=Array.isArray(parsed)?parsed:(parsed.entries||[]);
+        if(!incoming.length) continue;
+
+        // Merge: add entries not already in localStorage (by id)
+        const existing=getEntries();
+        const existingIds=new Set(existing.map(e=>e.id));
+        const newEntries=incoming.filter(e=>e.id&&!existingIds.has(e.id));
+
+        if(newEntries.length){
+          const merged=[...existing,...newEntries];
+          // Sort by date desc
+          merged.sort((a,b)=>(b.date||'').localeCompare(a.date||'')||b.id.localeCompare(a.id));
+          setEntries(merged);
+          totalMerged+=newEntries.length;
+        }
+      } catch(fileErr){
+        console.warn('Pull error for '+f.path,fileErr);
+        errors++;
+      }
+    }
+
+    // Also restore profile if stored
+    if(totalMerged>0||errors===0){
+      toast(`✓ Pulled ${totalMerged} entries from GitHub`,'success');
+      renderToday();
+      renderFastToday();
+    } else {
+      toast('Nothing new to pull','');
+    }
+  } catch(err){
+    toast('Pull failed: '+err.message,'error');
+  } finally{
+    if(btn){btn.textContent='↓ Pull data from GitHub';btn.style.opacity='';btn.style.pointerEvents='';}
+  }
+}
+
 // ── MODAL / TAB ──
 function openModal(id){document.getElementById(id).classList.add('open')}
 function closeModal(id){document.getElementById(id).classList.remove('open')}
@@ -1428,9 +1497,17 @@ function initApp(){
   ['w-date','wo-date','n-date'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=today});
   const p=getProfile();
   if(p){document.getElementById('q-wunit').value=p.wunit||'lbs';document.getElementById('w-unit').value=p.wunit||'lbs';}
+
+  // Auto-pull if localStorage has no entries but GitHub is configured
+  // This handles the "fresh deploy, data is in GitHub" case
+  const entries=getEntries();
+  if(entries.length===0&&p?.ghToken&&p?.ghUser){
+    toast('No local data — pulling from GitHub...','');
+    pullFromGitHub();
+  }
+
   renderToday();
   renderFastToday();
-  // Live fast timer — update every minute
   if(fastTimerInterval) clearInterval(fastTimerInterval);
   fastTimerInterval = setInterval(()=>{
     updateFastTimer();
