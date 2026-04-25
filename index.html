@@ -1624,6 +1624,7 @@ async function syncToGitHub(){
     ];
     for(const f of filesToSync){
       await push(p, f.path, f.content);
+      await new Promise(r=>setTimeout(r,300));
     }
     btn.textContent='✓ synced';btn.className='sync-btn synced';toast('Synced to GitHub','success');
     setTimeout(()=>{btn.textContent='↑ sync';btn.className='sync-btn'},3000);
@@ -1635,9 +1636,40 @@ async function syncToGitHub(){
 async function push(p,path,content){
   const url=`https://api.github.com/repos/${p.ghUser}/${p.ghRepo}/contents/${path}`;
   let sha=null;
-  try{const r=await fetch(url,{headers:{Authorization:`token ${p.ghToken}`,Accept:'application/vnd.github.v3+json'}});if(r.ok){const d=await r.json();sha=d.sha}}catch{}
-  const res=await fetch(url,{method:'PUT',headers:{Authorization:`token ${p.ghToken}`,Accept:'application/vnd.github.v3+json','Content-Type':'application/json'},body:JSON.stringify({message:`hz.fit: update ${path}`,content:btoa(unescape(encodeURIComponent(content))),...(sha?{sha}:{})})});
-  if(!res.ok){const er=await res.json();throw new Error(er.message||'GitHub error')}
+  try{
+    const r=await fetch(url,{headers:{Authorization:`token ${p.ghToken}`,Accept:'application/vnd.github.v3+json'}});
+    if(r.ok){const d=await r.json();sha=d.sha;}
+  }catch{}
+
+  const body={
+    message:`hz.fit: update ${path}`,
+    content:btoa(unescape(encodeURIComponent(content))),
+    ...(sha?{sha}:{})
+  };
+
+  const res=await fetch(url,{method:'PUT',
+    headers:{Authorization:`token ${p.ghToken}`,Accept:'application/vnd.github.v3+json','Content-Type':'application/json'},
+    body:JSON.stringify(body)
+  });
+
+  if(res.status===409){
+    // SHA conflict — re-fetch SHA and retry once after short delay
+    await new Promise(r=>setTimeout(r,800));
+    let retrySha=null;
+    try{
+      const r2=await fetch(url,{headers:{Authorization:`token ${p.ghToken}`,Accept:'application/vnd.github.v3+json'}});
+      if(r2.ok){const d=await r2.json();retrySha=d.sha;}
+    }catch{}
+    const retryBody={...body,...(retrySha?{sha:retrySha}:{})};
+    const retry=await fetch(url,{method:'PUT',
+      headers:{Authorization:`token ${p.ghToken}`,Accept:'application/vnd.github.v3+json','Content-Type':'application/json'},
+      body:JSON.stringify(retryBody)
+    });
+    if(!retry.ok){const er=await retry.json();throw new Error(er.message||'GitHub error on retry');}
+    return;
+  }
+
+  if(!res.ok){const er=await res.json();throw new Error(er.message||'GitHub error');}
 }
 
 // ── SETTINGS ──
