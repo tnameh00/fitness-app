@@ -276,6 +276,22 @@
       </div>
     </div>
     <div class="tdee-preview" id="tdee-preview"><span id="tdee-text"></span></div>
+
+    <div class="setup-sec">GitHub sync (optional but recommended)</div>
+    <div style="font-size:13px;color:var(--text-2);line-height:1.6;margin-bottom:12px">Your data syncs to a private GitHub repo. Enter once — never loses history on redeploy.</div>
+    <div class="form-group" style="margin-bottom:10px">
+      <label>GitHub username</label>
+      <input type="text" id="s-gh-user" placeholder="tnameh00" autocapitalize="none" autocorrect="off"/>
+    </div>
+    <div class="form-group" style="margin-bottom:10px">
+      <label>Repo name</label>
+      <input type="text" id="s-gh-repo" placeholder="my-data" autocapitalize="none" autocorrect="off"/>
+    </div>
+    <div class="form-group" style="margin-bottom:16px">
+      <label>Personal access token (repo scope)</label>
+      <input type="password" id="s-gh-token" placeholder="ghp_..." autocapitalize="none" autocorrect="off"/>
+    </div>
+
     <button class="btn btn-primary" onclick="saveSetup()">Start tracking →</button>
   </div>
 </div>
@@ -820,7 +836,12 @@ function saveSetup(){
   const goal=parseFloat(document.getElementById('s-goal').value)||0;
   const deficit=parseInt(document.getElementById('s-rate').value);
   if(!age||!weight){toast('Fill in age and weight','error');return}
-  const p={age,sex,heightCm:hcm,weight,wunit,activity,goal,deficitPerDay:deficit,ghUser:'',ghRepo:'my-data',ghToken:''};
+
+  const ghUser=document.getElementById('s-gh-user').value.trim();
+  const ghRepo=document.getElementById('s-gh-repo').value.trim()||'my-data';
+  const ghToken=document.getElementById('s-gh-token').value.trim();
+
+  const p={age,sex,heightCm:hcm,weight,wunit,activity,goal,deficitPerDay:deficit,ghUser,ghRepo,ghToken};
   DB.set('profile',p);DB.set('setup_done',true);
   addEntry({type:'weight',date:todayStr(),value:weight,unit:wunit,time:'morning',note:'starting weight'});
   document.getElementById('setup-screen').style.display='none';
