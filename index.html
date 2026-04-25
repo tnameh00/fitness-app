@@ -1732,29 +1732,26 @@ async function pullFromGitHub(){
 
   let totalMerged=0;
   let errors=0;
+  let debugLog=[];
 
   try{
     for(const f of files){
       try{
         const url=`https://api.github.com/repos/${p.ghUser}/${p.ghRepo}/contents/${f.path}`;
         const res=await fetch(url,{headers:{Authorization:`token ${p.ghToken}`,Accept:'application/vnd.github.v3+json'}});
-        if(!res.ok) continue; // file doesn't exist yet — skip
+        if(!res.ok){debugLog.push(f.path+': HTTP '+res.status);continue;}
 
         const data=await res.json();
-        // GitHub returns base64-encoded content — use TextDecoder for mobile Safari compatibility
         const raw=atob(data.content.replace(/\s/g,''));
         const bytes=new Uint8Array(raw.length);
         for(let i=0;i<raw.length;i++) bytes[i]=raw.charCodeAt(i);
         const decoded=new TextDecoder().decode(bytes);
         const parsed=JSON.parse(decoded);
 
-        // Support both array format and {entries:[...]} format
         const incoming=Array.isArray(parsed)?parsed:(parsed.entries||[]);
+        debugLog.push(f.path+': '+incoming.length+' entries found');
         if(!incoming.length) continue;
 
-        // Merge: add entries not already in localStorage (by id)
-        // Also skip weight entries where same date already exists locally
-        // (prevents duplicate "starting weight" after re-setup)
         const existing=getEntries();
         const existingIds=new Set(existing.map(e=>e.id));
         const existingWeightDates=new Set(
@@ -1763,10 +1760,11 @@ async function pullFromGitHub(){
         const newEntries=incoming.filter(e=>{
           if(!e.id) return false;
           if(existingIds.has(e.id)) return false;
-          // Skip weight entries for dates already logged locally
           if(e.type==='weight'&&existingWeightDates.has(e.date)) return false;
           return true;
         });
+
+        debugLog.push('  → '+newEntries.length+' new to merge');
 
         if(newEntries.length){
           const merged=[...existing,...newEntries];
@@ -1775,18 +1773,20 @@ async function pullFromGitHub(){
           totalMerged+=newEntries.length;
         }
       } catch(fileErr){
+        debugLog.push(f.path+': ERROR '+fileErr.message);
         console.warn('Pull error for '+f.path,fileErr);
         errors++;
       }
     }
 
-    // Also restore profile if stored
-    if(totalMerged>0||errors===0){
+    console.log('Pull debug:\n'+debugLog.join('\n'));
+    alert('Pull debug:\n'+debugLog.join('\n'));
+
+    if(totalMerged>0){
       toast(`✓ Pulled ${totalMerged} entries from GitHub`,'success');
-      renderToday();
-      renderFastToday();
+      renderToday();renderFastToday();
     } else {
-      toast('Nothing new to pull','');
+      toast('0 entries pulled — see debug alert','');
     }
   } catch(err){
     toast('Pull failed: '+err.message,'error');
