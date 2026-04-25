@@ -1615,13 +1615,16 @@ async function syncToGitHub(){
   try{
     const all=getEntries();
     const build=(type,extra={})=>JSON.stringify({schema_version:SV,app:'hz.fit',exported_at:new Date().toISOString(),...extra,entries:all.filter(e=>e.type===type)},null,2);
-    await Promise.all([
-      push(p,'health/weights.json',build('weight')),
-      push(p,'health/workouts.json',build('workout')),
-      push(p,'health/nutrition.json',build('nutrition',{tdee:calcTDEE(p),target_calories:calcTarget(p),protein_target:calcProteinTarget(p)})),
-      push(p,'health/fasting.json',build('fast',{default_protocol:getIfSettings().protocol})),
-      push(p,'health/body-composition.json',build('body_composition',{source:'renpho',fields:['weight','bmi','body_fat_pct','subcutaneous_fat_pct','visceral_fat','fat_free_weight','skeletal_muscle_pct','muscle_mass','bone_mass','bmr','metabolic_age','protein_pct','body_water_pct']})),
-    ]);
+    const filesToSync = [
+      {path:'health/weights.json',     content:build('weight')},
+      {path:'health/workouts.json',    content:build('workout')},
+      {path:'health/nutrition.json',   content:build('nutrition',{tdee:calcTDEE(p),target_calories:calcTarget(p),protein_target:calcProteinTarget(p)})},
+      {path:'health/body-composition.json', content:build('body_composition',{source:'renpho'})},
+      {path:'health/fasting.json',     content:build('fast',{default_protocol:getIfSettings().protocol})},
+    ];
+    for(const f of filesToSync){
+      await push(p, f.path, f.content);
+    }
     btn.textContent='✓ synced';btn.className='sync-btn synced';toast('Synced to GitHub','success');
     setTimeout(()=>{btn.textContent='↑ sync';btn.className='sync-btn'},3000);
   }catch(err){
