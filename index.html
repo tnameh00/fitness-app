@@ -2483,11 +2483,41 @@ async function runAI(type){
 }
 
 function init(){
+  const done = DB.get('setup_done', false);
+  const p = getProfile();
 
-  if(DB.get('setup_done',false)){
+  // If profile exists with token, skip setup entirely even if setup_done was reset
+  // This prevents the pain of re-entering details during testing
+  if(p && p.ghToken && p.weight){
+    DB.set('setup_done', true);
     document.getElementById('setup-screen').style.display='none';
     document.getElementById('app').style.display='flex';
     initApp();
+    return;
+  }
+
+  if(done){
+    document.getElementById('setup-screen').style.display='none';
+    document.getElementById('app').style.display='flex';
+    initApp();
+    return;
+  }
+
+  // Pre-fill setup wizard from last saved profile if it exists
+  // Makes re-running setup during testing painless
+  if(p){
+    if(p.age)      document.getElementById('s-age').value = p.age;
+    if(p.sex)      document.getElementById('s-sex').value = p.sex;
+    if(p.heightCm) document.getElementById('s-height').value = Math.round(p.heightCm/30.48)+'ft '+Math.round((p.heightCm%30.48)/2.54)+'in';
+    if(p.weight)   document.getElementById('s-weight').value = p.weight;
+    if(p.wunit)    document.getElementById('s-wunit').value = p.wunit;
+    if(p.activity) document.getElementById('s-activity').value = p.activity;
+    if(p.goal)     document.getElementById('s-goal').value = p.goal;
+    if(p.deficitPerDay) document.getElementById('s-rate').value = p.deficitPerDay;
+    if(p.ghUser)   document.getElementById('s-gh-user').value = p.ghUser;
+    if(p.ghRepo)   document.getElementById('s-gh-repo').value = p.ghRepo || 'my-data';
+    if(p.ghToken)  document.getElementById('s-gh-token').value = p.ghToken;
+    updatePreview();
   }
 }
 init();
