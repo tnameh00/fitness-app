@@ -191,6 +191,17 @@
     .pillar-bar-amber{background:var(--amber)}
     .today-week-wrap{padding:12px 14px 14px}
 
+    /* photo scan */
+    .photo-scan-btn{display:flex;align-items:center;gap:12px;background:linear-gradient(135deg,rgba(224,123,46,0.12),rgba(61,196,138,0.08));border:1px solid var(--border-2);border-radius:var(--r);padding:14px 16px;cursor:pointer;width:100%;transition:all .15s}
+    .photo-scan-btn:active{transform:scale(.98);opacity:.85}
+    .photo-scan-icon{font-size:24px;line-height:1;flex-shrink:0}
+    .photo-scan-text{font-size:14px;font-weight:600;color:var(--text-1);line-height:1.3}
+    .photo-analyzing{opacity:.6;pointer-events:none}
+    #photo-items-list .photo-item{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px}
+    #photo-items-list .photo-item:last-child{border-bottom:none}
+    #photo-items-list .photo-item-name{color:var(--text-1);font-weight:500}
+    #photo-items-list .photo-item-cals{color:var(--text-2)}
+
     /* streak dots */
     .streak-dots{display:flex;flex-wrap:wrap;gap:4px;padding:10px 14px 4px}
     .dot{width:9px;height:9px;border-radius:50%;background:var(--surface-2)}
@@ -569,6 +580,36 @@
       </div>
 
       <div class="sec-label">LOG NUTRITION</div>
+
+      <!-- Photo scan -->
+      <div style="padding:0 14px 4px">
+        <label class="photo-scan-btn">
+          <span class="photo-scan-icon">📷</span>
+          <span class="photo-scan-text">Scan food photo → auto-fill macros</span>
+          <input type="file" accept="image/*" capture="environment" style="display:none" onchange="analyzeFoodPhoto(this)"/>
+        </label>
+      </div>
+
+      <!-- Photo result card (hidden until analysis returns) -->
+      <div class="card" id="photo-result-card" style="display:none">
+        <div class="card-hd">
+          <span class="card-title" id="photo-result-title">Analyzing...</span>
+          <span class="card-meta" id="photo-confidence"></span>
+        </div>
+        <div style="padding:0 14px 6px" id="photo-items-list"></div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border-top:1px solid var(--border)">
+          <div class="wstat"><div class="wstat-val" id="photo-cals">—</div><div class="wstat-lbl">cal</div></div>
+          <div class="wstat"><div class="wstat-val" id="photo-protein">—</div><div class="wstat-lbl">protein</div></div>
+          <div class="wstat"><div class="wstat-val" id="photo-carbs">—</div><div class="wstat-lbl">carbs</div></div>
+          <div class="wstat"><div class="wstat-val" id="photo-fat">—</div><div class="wstat-lbl">fat</div></div>
+        </div>
+        <div style="padding:10px 14px;border-top:1px solid var(--border);display:flex;gap:8px">
+          <button class="btn btn-green" style="flex:2" onclick="acceptPhotoResult()">Use these values</button>
+          <button class="btn btn-ghost" style="flex:1" onclick="dismissPhotoResult()">Dismiss</button>
+        </div>
+        <div style="padding:0 14px 12px;font-size:12px;color:var(--text-3);line-height:1.5" id="photo-notes"></div>
+      </div>
+
       <div class="card">
         <div class="card-body">
           <div class="form-row">
@@ -2220,6 +2261,142 @@ function renderCumulative(){
       parts.push('total deficit '+allTime.total.toLocaleString()+' cal = ~'+allTime.projectedLbs+'lb');
     ins.textContent=parts.join(' · ')||'Log calories and activity to see your trend.';
   }
+}
+
+// ── FOOD PHOTO ANALYSIS ──
+let photoResult = null;
+
+async function analyzeFoodPhoto(input){
+  const file = input.files[0];
+  if(!file) return;
+
+  const workerUrl = DB.get('worker_url','') || '';
+  if(!workerUrl || workerUrl.includes('YOUR_SUBDOMAIN')){
+    toast('Set Worker URL in Settings first','error');
+    return;
+  }
+
+  // Show loading state
+  const btn = input.closest('label');
+  if(btn){
+    btn.classList.add('photo-analyzing');
+    btn.querySelector('.photo-scan-text').textContent = 'Analyzing photo...';
+    btn.querySelector('.photo-scan-icon').textContent = '⏳';
+  }
+  const resultCard = document.getElementById('photo-result-card');
+  resultCard.style.display = 'none';
+
+  try{
+    // Resize image before sending — max 800px, keeps cost low
+    const base64 = await resizeAndEncodeImage(file, 800);
+    const mediaType = file.type || 'image/jpeg';
+
+    const res = await fetch(workerUrl + '/analyze-food', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({image: base64, mediaType})
+    });
+
+    if(!res.ok){
+      const err = await res.json();
+      throw new Error(err.error || 'Analysis failed');
+    }
+
+    const data = await res.json();
+    if(data.error) throw new Error(data.error);
+
+    photoResult = data;
+    showPhotoResult(data);
+
+  } catch(err){
+    toast('Photo analysis failed: ' + err.message, 'error');
+    console.error('Food analysis error:', err);
+  } finally {
+    if(btn){
+      btn.classList.remove('photo-analyzing');
+      btn.querySelector('.photo-scan-text').textContent = 'Scan food photo → auto-fill macros';
+      btn.querySelector('.photo-scan-icon').textContent = '📷';
+    }
+    input.value = '';
+  }
+}
+
+function resizeAndEncodeImage(file, maxPx){
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      const scale = Math.min(1, maxPx / Math.max(img.width, img.height));
+      const w = Math.round(img.width * scale);
+      const h = Math.round(img.height * scale);
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      URL.revokeObjectURL(url);
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.82);
+      resolve(dataUrl.split(',')[1]); // base64 only
+    };
+    img.onerror = reject;
+    img.src = url;
+  });
+}
+
+function showPhotoResult(data){
+  const card = document.getElementById('photo-result-card');
+  const title = document.getElementById('photo-result-title');
+  const confEl = document.getElementById('photo-confidence');
+  const itemsList = document.getElementById('photo-items-list');
+  const notesEl = document.getElementById('photo-notes');
+
+  title.textContent = data.description || 'Food detected';
+
+  const confMap = {high:'✓ High confidence', medium:'~ Medium confidence', low:'⚠ Low confidence'};
+  confEl.textContent = confMap[data.confidence] || '';
+  confEl.style.color = data.confidence==='high'?'var(--green)':data.confidence==='low'?'var(--amber)':'var(--text-2)';
+
+  // Items list
+  if(data.items && data.items.length > 1){
+    itemsList.innerHTML = data.items.map(item => `
+      <div class="photo-item">
+        <span class="photo-item-name">${item.name}</span>
+        <span class="photo-item-cals">${item.calories} cal · P${item.protein_g}g C${item.carbs_g}g F${item.fat_g}g</span>
+      </div>`).join('');
+  } else {
+    itemsList.innerHTML = '';
+  }
+
+  // Totals
+  const t = data.totals || {};
+  document.getElementById('photo-cals').textContent = t.calories || '—';
+  document.getElementById('photo-protein').textContent = (t.protein_g || 0) + 'g';
+  document.getElementById('photo-carbs').textContent = (t.carbs_g || 0) + 'g';
+  document.getElementById('photo-fat').textContent = (t.fat_g || 0) + 'g';
+
+  notesEl.textContent = data.notes || '';
+  card.style.display = 'block';
+
+  // Scroll to result
+  card.scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+
+function acceptPhotoResult(){
+  if(!photoResult) return;
+  const t = photoResult.totals || {};
+  document.getElementById('n-cals').value = t.calories || '';
+  document.getElementById('n-protein').value = t.protein_g || '';
+  document.getElementById('n-carbs').value = t.carbs_g || '';
+  document.getElementById('n-fat').value = t.fat_g || '';
+  document.getElementById('photo-result-card').style.display = 'none';
+  photoResult = null;
+  // Scroll to form
+  document.getElementById('n-cals').scrollIntoView({behavior:'smooth', block:'center'});
+  document.getElementById('n-cals').focus();
+  toast('Values filled in — review and save', 'success');
+}
+
+function dismissPhotoResult(){
+  document.getElementById('photo-result-card').style.display = 'none';
+  photoResult = null;
 }
 
 // ── AI COACH ──
