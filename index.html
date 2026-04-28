@@ -202,6 +202,14 @@
     #photo-items-list .photo-item-name{color:var(--text-1);font-weight:500}
     #photo-items-list .photo-item-cals{color:var(--text-2)}
 
+    /* collapsible settings sections */
+    .cfg-section{border-bottom:1px solid var(--border);margin-bottom:0}
+    .cfg-section:last-of-type{border-bottom:none}
+    .cfg-section-hd{display:flex;justify-content:space-between;align-items:center;width:100%;background:none;border:none;padding:14px 0;cursor:pointer;font-family:var(--f-sans);font-size:14px;font-weight:600;color:var(--text-1);text-align:left}
+    .cfg-section-hd:active{opacity:.7}
+    .cfg-chevron{color:var(--text-3);font-size:12px;transition:transform .2s}
+    .cfg-section-body{padding-bottom:14px}
+
     /* streak dots */
     .streak-dots{display:flex;flex-wrap:wrap;gap:4px;padding:10px 14px 4px}
     .dot{width:9px;height:9px;border-radius:50%;background:var(--surface-2)}
@@ -706,6 +714,23 @@
         </div>
       </div>
 
+      <div class="sec-label">LOG STEPS</div>
+      <div class="card">
+        <div class="card-body">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Date</label>
+              <input type="date" id="steps-date"/>
+            </div>
+            <div class="form-group">
+              <label>Step count</label>
+              <input type="number" id="steps-count" inputmode="numeric" placeholder="10,000" style="font-size:20px;font-weight:600"/>
+            </div>
+          </div>
+          <button class="btn btn-primary" style="background:var(--green)" onclick="saveStepsEntry()">Save steps</button>
+        </div>
+      </div>
+
       <div class="sec-label">RECENT ACTIVITY</div>
       <div id="workout-list"></div>
     </div>
@@ -830,30 +855,66 @@
   <div class="sheet">
     <div class="sheet-handle"></div>
     <div class="sheet-title">Settings</div>
-    <div style="font-size:12px;letter-spacing:1px;color:var(--text-2);text-transform:uppercase;margin-bottom:10px;font-weight:500">GitHub Sync</div>
-    <div class="form-group" style="margin-bottom:10px"><label>GitHub username</label><input type="text" id="cfg-user" placeholder="yourusername"/></div>
-    <div class="form-group" style="margin-bottom:10px"><label>Repo name</label><input type="text" id="cfg-repo" placeholder="my-data"/></div>
-    <div class="form-group" style="margin-bottom:16px"><label>Personal access token (repo scope)</label><input type="password" id="cfg-token" placeholder="ghp_..."/></div>
-    <div style="font-size:12px;letter-spacing:1px;color:var(--text-2);text-transform:uppercase;margin-bottom:10px;font-weight:500">AI Coach</div>
-    <div class="form-group" style="margin-bottom:16px"><label>Worker URL</label><input type="text" id="cfg-worker" placeholder="https://hzfit-worker.xxx.workers.dev"/></div>
-    <div style="font-size:12px;letter-spacing:1px;color:var(--text-2);text-transform:uppercase;margin-bottom:10px;font-weight:500">Profile</div>
-    <div class="form-row">
-      <div class="form-group"><label>Weight unit</label><select id="cfg-wunit"><option value="lbs">lbs</option><option value="kg">kg</option></select></div>
-      <div class="form-group"><label>Activity</label>
-        <select id="cfg-activity">
-          <option value="1.2">Sedentary</option><option value="1.375">Light</option>
-          <option value="1.55">Moderate</option><option value="1.725">Active</option>
-        </select>
+
+    <!-- GitHub Sync -->
+    <div class="cfg-section">
+      <button class="cfg-section-hd" onclick="toggleCfgSection('cfg-github')">
+        <span>GitHub Sync</span><span class="cfg-chevron" id="chevron-github">▾</span>
+      </button>
+      <div class="cfg-section-body" id="cfg-github">
+        <div class="form-group" style="margin-bottom:10px"><label>GitHub username</label><input type="text" id="cfg-user" placeholder="yourusername"/></div>
+        <div class="form-group" style="margin-bottom:10px"><label>Repo name</label><input type="text" id="cfg-repo" placeholder="my-data"/></div>
+        <div class="form-group" style="margin-bottom:4px"><label>Personal access token (repo scope)</label><input type="password" id="cfg-token" placeholder="ghp_..."/></div>
       </div>
     </div>
 
-    <div style="font-size:12px;letter-spacing:1px;color:var(--text-2);text-transform:uppercase;margin-bottom:10px;margin-top:16px;font-weight:500">Activity Goals</div>
-    <div class="form-group" style="margin-bottom:16px">
-      <label>Daily step target</label>
-      <input type="number" id="cfg-steps-target" inputmode="numeric" placeholder="10000"/>
+    <!-- AI Coach -->
+    <div class="cfg-section">
+      <button class="cfg-section-hd" onclick="toggleCfgSection('cfg-ai')">
+        <span>AI Coach</span><span class="cfg-chevron" id="chevron-ai">▾</span>
+      </button>
+      <div class="cfg-section-body" id="cfg-ai" style="display:none">
+        <div class="form-group" style="margin-bottom:4px"><label>Worker URL</label><input type="text" id="cfg-worker" placeholder="https://hzfit-worker.xxx.workers.dev"/></div>
+      </div>
     </div>
 
-    <div style="font-size:12px;letter-spacing:1px;color:var(--text-2);text-transform:uppercase;margin-bottom:10px;font-weight:500">Nutrition Goals</div>
+    <!-- Profile -->
+    <div class="cfg-section">
+      <button class="cfg-section-hd" onclick="toggleCfgSection('cfg-profile')">
+        <span>Profile</span><span class="cfg-chevron" id="chevron-profile">▸</span>
+      </button>
+      <div class="cfg-section-body" id="cfg-profile" style="display:none">
+        <div class="form-row" style="margin-bottom:4px">
+          <div class="form-group"><label>Weight unit</label><select id="cfg-wunit"><option value="lbs">lbs</option><option value="kg">kg</option></select></div>
+          <div class="form-group"><label>Activity level</label>
+            <select id="cfg-activity">
+              <option value="1.2">Sedentary</option><option value="1.375">Light</option>
+              <option value="1.55">Moderate</option><option value="1.725">Active</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Activity Goals -->
+    <div class="cfg-section">
+      <button class="cfg-section-hd" onclick="toggleCfgSection('cfg-activity-goals')">
+        <span>Activity Goals</span><span class="cfg-chevron" id="chevron-activity-goals">▸</span>
+      </button>
+      <div class="cfg-section-body" id="cfg-activity-goals" style="display:none">
+        <div class="form-group" style="margin-bottom:4px">
+          <label>Daily step target</label>
+          <input type="number" id="cfg-steps-target" inputmode="numeric" placeholder="10000"/>
+        </div>
+      </div>
+    </div>
+
+    <!-- Nutrition Goals -->
+    <div class="cfg-section">
+      <button class="cfg-section-hd" onclick="toggleCfgSection('cfg-nutrition')">
+        <span>Nutrition Goals</span><span class="cfg-chevron" id="chevron-nutrition">▸</span>
+      </button>
+      <div class="cfg-section-body" id="cfg-nutrition" style="display:none">
     <div class="form-group" style="margin-bottom:14px">
       <label>Daily calorie target</label>
       <input type="number" id="cfg-cal-target" inputmode="numeric" placeholder="e.g. 1800" style="font-size:18px;font-weight:600"/>
@@ -898,6 +959,8 @@
         <div><div style="font-family:var(--f-serif);font-size:22px;color:var(--amber);font-weight:700" id="cfg-fat-g">—</div><div style="font-size:11px;color:var(--text-3)">fat g</div></div>
       </div>
     </div>
+      </div><!-- /cfg-nutrition body -->
+    </div><!-- /cfg-nutrition section -->
 
     <div style="display:flex;gap:8px;margin-top:16px">
       <button class="btn btn-ghost" style="flex:1" onclick="closeModal('settings-modal')">Cancel</button>
@@ -1009,6 +1072,21 @@ function byType(type,maxDays){
 }
 
 // ── SAVES ──
+function saveStepsEntry(){
+  // Save steps for any date (for backfilling past entries)
+  const date = document.getElementById('steps-date').value || todayStr();
+  const steps = parseInt(document.getElementById('steps-count').value);
+  if(!steps||isNaN(steps)||steps<0){toast('Enter step count','error');return;}
+  // Replace existing entry for that date
+  const arr = getEntries().filter(e=>!(e.type==='steps'&&e.date===date));
+  arr.unshift({id:Date.now().toString(),sv:2,type:'steps',date,steps});
+  setEntries(arr);
+  document.getElementById('steps-count').value='';
+  toast(steps.toLocaleString()+' steps saved for '+fmtDate(date),'success');
+  renderToday();
+  renderWorkoutTab();
+}
+
 function saveSteps(){
   const steps=parseInt(document.getElementById('q-steps').value);
   if(!steps||isNaN(steps)||steps<0){toast('Enter step count','error');return;}
@@ -1521,9 +1599,21 @@ function renderNutritionTab(){
 
 // ── RENDER WORKOUTS ──
 function renderWorkoutTab(){
-  const entries=byType('workout').slice(0,20);
+  // Merge workouts + steps sorted by date
+  const workouts=byType('workout');
+  const steps=byType('steps');
+  const combined=[...workouts,...steps]
+    .sort((a,b)=>b.date.localeCompare(a.date)||b.id.localeCompare(a.id))
+    .slice(0,25);
   const list=document.getElementById('workout-list');
-  list.innerHTML=entries.length?entries.map(e=>`<div class="log-entry"><div class="log-entry-inner"><div class="log-entry-content"><div class="log-top"><span class="log-type ${['walk','run','cardio','sports'].includes(e.workoutType)?'t-cardio':'t-workout'}">${e.workoutType||'workout'}</span><span class="log-date">${fmtDate(e.date)}</span></div><div class="log-summary">${e.name}${e.duration?' · '+e.duration+' min':''}${e.calsBurned?' · ~'+e.calsBurned+' cal':''}</div>${e.distance?`<div class="log-sub">${e.distance}</div>`:''}</div><button class="delete-btn" onclick="deleteEntry('${e.id}')">×</button></div></div>`).join(''):'<div class="empty"><p>No activities logged yet.</p></div>';
+  list.innerHTML=combined.length?combined.map(e=>{
+    if(e.type==='steps'){
+      const target=getStepsTarget();
+      const pct=Math.round(e.steps/target*100);
+      return `<div class="log-entry"><div class="log-entry-inner"><div class="log-entry-content"><div class="log-top"><span class="log-type" style="color:var(--green)">steps</span><span class="log-date">${fmtDate(e.date)}</span></div><div class="log-summary">${e.steps.toLocaleString()} steps</div><div class="log-sub">${pct}% of ${target.toLocaleString()} target${e.steps>=target?' · ✓':''}</div></div><button class="delete-btn" onclick="deleteEntry('${e.id}')">×</button></div></div>`;
+    }
+    return `<div class="log-entry"><div class="log-entry-inner"><div class="log-entry-content"><div class="log-top"><span class="log-type ${['walk','run','cardio','sports'].includes(e.workoutType)?'t-cardio':'t-workout'}">${e.workoutType||'workout'}</span><span class="log-date">${fmtDate(e.date)}</span></div><div class="log-summary">${e.name}${e.duration?' · '+e.duration+' min':''}${e.calsBurned?' · ~'+e.calsBurned+' cal':''}</div>${e.distance?`<div class="log-sub">${e.distance}</div>`:''}</div><button class="delete-btn" onclick="deleteEntry('${e.id}')">×</button></div></div>`;
+  }).join(''):'<div class="empty"><p>No activities logged yet.</p></div>';
   drawActivityChart();
 }
 
@@ -1988,6 +2078,16 @@ function saveSettings(){
 
   closeModal('settings-modal');toast('Saved','success');renderToday();renderNutritionTab();
 }
+function toggleCfgSection(id){
+  const body=document.getElementById(id);
+  const chevronId='chevron-'+id.replace('cfg-','');
+  const chevron=document.getElementById(chevronId);
+  if(!body)return;
+  const open=body.style.display==='none'||body.style.display==='';
+  body.style.display=open?'block':'none';
+  if(chevron) chevron.textContent=open?'▾':'▸';
+}
+
 function resetSetup(){DB.set('setup_done',false);closeModal('settings-modal');document.getElementById('setup-screen').style.display='flex';document.getElementById('app').style.display='none';}
 
 // ── GITHUB PULL ──
@@ -2099,7 +2199,7 @@ function toast(msg,type=''){const el=document.getElementById('toast');el.textCon
 // ── INIT ──
 function initApp(){
   const today=todayStr();
-  ['w-date','wo-date','n-date'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=today});
+  ['w-date','wo-date','n-date','steps-date'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=today});
   const p=getProfile();
   if(p){document.getElementById('q-wunit').value=p.wunit||'lbs';document.getElementById('w-unit').value=p.wunit||'lbs';}
 
