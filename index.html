@@ -378,6 +378,17 @@
             </div>
             <div class="pillar-bar-wrap"><div class="pillar-bar pillar-bar-amber" id="pillar-fast-bar" style="width:0%"></div></div>
           </div>
+
+          <!-- Steps pillar -->
+          <div class="pillar" id="pillar-steps">
+            <div class="pillar-icon">👟</div>
+            <div class="pillar-body">
+              <div class="pillar-label">Steps</div>
+              <div class="pillar-value" id="pillar-steps-val">—</div>
+              <div class="pillar-sub" id="pillar-steps-sub">target: 10,000</div>
+            </div>
+            <div class="pillar-bar-wrap"><div class="pillar-bar" id="pillar-steps-bar" style="width:0%;background:var(--green)"></div></div>
+          </div>
         </div>
 
         <!-- Week progress bar -->
@@ -394,6 +405,16 @@
       <div class="sec-label">LOG TODAY</div>
       <div class="card">
         <div class="card-body">
+          <!-- Steps row -->
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--border)">
+            <div style="flex:1">
+              <label>Steps today <span id="today-steps-meta" style="color:var(--text-3);font-weight:400;text-transform:none;letter-spacing:0;font-size:12px"></span></label>
+              <div style="display:flex;gap:6px;margin-top:4px">
+                <input type="number" id="q-steps" inputmode="numeric" placeholder="10,000" class="input-lg" style="flex:1"/>
+              </div>
+            </div>
+            <button class="btn btn-primary" onclick="saveSteps()" style="width:auto;padding:12px 16px;align-self:flex-end;font-size:13px;margin-top:0;background:var(--green)">Log</button>
+          </div>
           <!-- Weight row -->
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--border)">
             <div style="flex:1">
@@ -825,6 +846,59 @@
         </select>
       </div>
     </div>
+
+    <div style="font-size:12px;letter-spacing:1px;color:var(--text-2);text-transform:uppercase;margin-bottom:10px;margin-top:16px;font-weight:500">Activity Goals</div>
+    <div class="form-group" style="margin-bottom:16px">
+      <label>Daily step target</label>
+      <input type="number" id="cfg-steps-target" inputmode="numeric" placeholder="10000"/>
+    </div>
+
+    <div style="font-size:12px;letter-spacing:1px;color:var(--text-2);text-transform:uppercase;margin-bottom:10px;font-weight:500">Nutrition Goals</div>
+    <div class="form-group" style="margin-bottom:14px">
+      <label>Daily calorie target</label>
+      <input type="number" id="cfg-cal-target" inputmode="numeric" placeholder="e.g. 1800" style="font-size:18px;font-weight:600"/>
+      <div style="font-size:12px;color:var(--text-3);margin-top:4px">Leave blank to use TDEE-based calculation</div>
+    </div>
+
+    <div style="font-size:13px;font-weight:500;color:var(--text-1);margin-bottom:10px">Macro split <span style="color:var(--text-3);font-weight:400;font-size:12px">(must total 100%)</span></div>
+
+    <div style="margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
+        <label style="color:var(--brown)">Protein</label>
+        <span style="font-size:14px;font-weight:600;color:var(--brown)" id="cfg-protein-pct-label">35%</span>
+      </div>
+      <input type="range" id="cfg-protein-pct" min="10" max="60" step="5" value="35"
+        style="width:100%;accent-color:var(--brown)" oninput="onMacroSlider('protein')"/>
+    </div>
+
+    <div style="margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
+        <label style="color:var(--green)">Carbs</label>
+        <span style="font-size:14px;font-weight:600;color:var(--green)" id="cfg-carbs-pct-label">40%</span>
+      </div>
+      <input type="range" id="cfg-carbs-pct" min="10" max="65" step="5" value="40"
+        style="width:100%;accent-color:var(--green)" oninput="onMacroSlider('carbs')"/>
+    </div>
+
+    <div style="margin-bottom:4px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
+        <label style="color:var(--amber)">Fat</label>
+        <span style="font-size:14px;font-weight:600;color:var(--amber)" id="cfg-fat-pct-label">25%</span>
+      </div>
+      <input type="range" id="cfg-fat-pct" min="10" max="50" step="5" value="25"
+        style="width:100%;accent-color:var(--amber)" oninput="onMacroSlider('fat')"/>
+    </div>
+
+    <!-- Live gram preview -->
+    <div style="background:var(--surface-2);border-radius:8px;padding:10px 14px;margin-bottom:4px" id="macro-gram-preview">
+      <div style="font-size:11px;color:var(--text-3);letter-spacing:.8px;text-transform:uppercase;margin-bottom:8px;font-weight:500">Grams at your calorie target</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;text-align:center">
+        <div><div style="font-family:var(--f-serif);font-size:22px;color:var(--brown);font-weight:700" id="cfg-protein-g">—</div><div style="font-size:11px;color:var(--text-3)">protein g</div></div>
+        <div><div style="font-family:var(--f-serif);font-size:22px;color:var(--green);font-weight:700" id="cfg-carbs-g">—</div><div style="font-size:11px;color:var(--text-3)">carbs g</div></div>
+        <div><div style="font-family:var(--f-serif);font-size:22px;color:var(--amber);font-weight:700" id="cfg-fat-g">—</div><div style="font-size:11px;color:var(--text-3)">fat g</div></div>
+      </div>
+    </div>
+
     <div style="display:flex;gap:8px;margin-top:16px">
       <button class="btn btn-ghost" style="flex:1" onclick="closeModal('settings-modal')">Cancel</button>
       <button class="btn btn-primary" style="flex:2" onclick="saveSettings()">Save</button>
@@ -854,10 +928,32 @@ function calcTDEE(p){
   if(p.scaleBMR&&p.scaleBMR>1000) return Math.round(p.scaleBMR*p.activity);
   return Math.round(calcBMR(p)*p.activity);
 }
-function calcTarget(p){return calcTDEE(p)-(p.deficitPerDay||500)}
+function calcTarget(p){
+  const goals=DB.get('nutrition_goals',null);
+  if(goals&&goals.calTarget) return goals.calTarget;
+  return calcTDEE(p)-(p.deficitPerDay||500);
+}
 function calcProteinTarget(p){
+  const goals=DB.get('nutrition_goals',null);
+  if(goals&&goals.proteinPct&&goals.calTarget){
+    return Math.round(goals.calTarget*goals.proteinPct/100/4);
+  }
+  // Fall back to 0.8g per lb
   const lbs=p.wunit==='lbs'?p.weight:p.weight*2.205;
   return Math.round(lbs*0.8);
+}
+
+function getMacroTargets(calTarget){
+  const goals=DB.get('nutrition_goals',null);
+  const p=goals?.proteinPct||35;
+  const ca=goals?.carbsPct||40;
+  const f=goals?.fatPct||25;
+  return{
+    protein: Math.round(calTarget*p/100/4),
+    carbs:   Math.round(calTarget*ca/100/4),
+    fat:     Math.round(calTarget*f/100/9),
+    proteinPct:p, carbsPct:ca, fatPct:f
+  };
 }
 function parseHeight(s){
   if(!s) return 170;
@@ -913,6 +1009,26 @@ function byType(type,maxDays){
 }
 
 // ── SAVES ──
+function saveSteps(){
+  const steps=parseInt(document.getElementById('q-steps').value);
+  if(!steps||isNaN(steps)||steps<0){toast('Enter step count','error');return;}
+  // Replace today's steps entry if one exists (you only log steps once per day)
+  const arr=getEntries().filter(e=>!(e.type==='steps'&&e.date===todayStr()));
+  arr.unshift({id:Date.now().toString(),sv:2,type:'steps',date:todayStr(),steps});
+  setEntries(arr);
+  document.getElementById('q-steps').value='';
+  toast(steps.toLocaleString()+' steps logged','success');
+  renderToday();
+}
+
+function getStepsTarget(){
+  return DB.get('steps_target', 10000);
+}
+
+function getTodaySteps(){
+  return getEntries().find(e=>e.type==='steps'&&e.date===todayStr());
+}
+
 function saveQuickWeight(){
   const val=parseFloat(document.getElementById('q-weight').value);
   const unit=document.getElementById('q-wunit').value;
@@ -1046,13 +1162,19 @@ function renderToday(){
     const pct=Math.min(100,Math.round(nt.calories/calTarget*100));
     const over=nt.calories>calTarget;
     document.getElementById('pillar-cal-val').textContent=nt.calories.toLocaleString()+' cal';
-    document.getElementById('pillar-cal-sub').textContent=(over?'+'+(nt.calories-calTarget)+' over ':((calTarget-nt.calories)+' left of '))+calTarget+' target';
+    // Show protein hit if available
+    if(nt.protein){
+      const macros=getMacroTargets(calTarget);
+      const proteinPct=Math.round(nt.protein/macros.protein*100);
+      document.getElementById('pillar-cal-sub').textContent=(over?'+'+(nt.calories-calTarget)+' over ':((calTarget-nt.calories)+' under '))+calTarget+' · P: '+proteinPct+'%';
+    } else {
+      document.getElementById('pillar-cal-sub').textContent=(over?'+'+(nt.calories-calTarget)+' over ':((calTarget-nt.calories)+' left of '))+calTarget;
+    }
     document.getElementById('pillar-cal-bar').style.width=pct+'%';
     document.getElementById('pillar-cal-bar').style.background=over?'var(--red)':'var(--brown)';
-    document.getElementById('pillar-calories').style.opacity='1';
   } else {
     document.getElementById('pillar-cal-val').textContent='—';
-    document.getElementById('pillar-cal-sub').textContent='tap to log calories';
+    document.getElementById('pillar-cal-sub').textContent='target: '+calTarget+' cal · tap to log';
     document.getElementById('pillar-cal-bar').style.width='0%';
   }
 
@@ -1129,6 +1251,27 @@ function renderToday(){
   const tw=all.find(e=>e.type==='weight'&&e.date===today);
   const metaEl=document.getElementById('today-w-meta');
   if(metaEl) metaEl.textContent=tw?'· '+tw.value+' '+tw.unit+' logged':'· not logged today';
+
+  // ── Steps pillar ──
+  const stepsTarget=getStepsTarget();
+  const todayStepsEntry=getTodaySteps();
+  const stepsVal=document.getElementById('pillar-steps-val');
+  const stepsSub=document.getElementById('pillar-steps-sub');
+  const stepsBar=document.getElementById('pillar-steps-bar');
+  const stepsMeta=document.getElementById('today-steps-meta');
+  if(todayStepsEntry){
+    const s=todayStepsEntry.steps;
+    const pct=Math.min(100,Math.round(s/stepsTarget*100));
+    if(stepsVal) stepsVal.textContent=s.toLocaleString();
+    if(stepsSub) stepsSub.textContent=(s>=stepsTarget?'✓ goal hit! · ':'('+pct+'%) · ')+stepsTarget.toLocaleString()+' target';
+    if(stepsBar){stepsBar.style.width=pct+'%';stepsBar.style.background=s>=stepsTarget?'var(--green)':'var(--brown)';}
+    if(stepsMeta) stepsMeta.textContent='· '+s.toLocaleString()+' logged';
+  } else {
+    if(stepsVal) stepsVal.textContent='—';
+    if(stepsSub) stepsSub.textContent='target: '+stepsTarget.toLocaleString();
+    if(stepsBar) stepsBar.style.width='0%';
+    if(stepsMeta) stepsMeta.textContent='';
+  }
 
   // ── Today entries list ──
   const todayE=all.filter(e=>e.date===today);
@@ -1351,12 +1494,15 @@ function drawRollingAvg(ws){
 function renderNutritionTab(){
   const p=getProfile();
   if(p){
-    const tdee=calcTDEE(p),tgt=calcTarget(p),pt=calcProteinTarget(p);
+    const tgt=calcTarget(p);
+    const macros=getMacroTargets(tgt);
+    const goals=DB.get('nutrition_goals',null);
+    const calSource=goals?.calTarget?'Custom goal':'TDEE estimate';
     document.getElementById('targets-grid').innerHTML=`
-      <div><div style="font-family:var(--f-serif);font-size:28px;color:var(--text-1);font-weight:700">${tdee}</div><div style="font-size:12px;color:var(--text-2);margin-top:4px;letter-spacing:.6px;font-weight:500">TDEE</div></div>
-      <div><div style="font-family:var(--f-serif);font-size:28px;color:var(--green);font-weight:700">${tgt}</div><div style="font-size:12px;color:var(--text-2);margin-top:4px;letter-spacing:.6px;font-weight:500">TARGET CAL</div></div>
-      <div><div style="font-family:var(--f-serif);font-size:28px;color:var(--brown);font-weight:700">${pt}g</div><div style="font-size:12px;color:var(--text-2);margin-top:4px;letter-spacing:.6px;font-weight:500">PROTEIN</div></div>
-      <div><div style="font-family:var(--f-serif);font-size:28px;color:var(--amber);font-weight:700">${p.deficitPerDay}</div><div style="font-size:12px;color:var(--text-2);margin-top:4px;letter-spacing:.6px;font-weight:500">DEFICIT/DAY</div></div>`;
+      <div><div style="font-family:var(--f-serif);font-size:28px;color:var(--green);font-weight:700">${tgt}</div><div style="font-size:12px;color:var(--text-2);margin-top:4px;letter-spacing:.6px;font-weight:500">CAL TARGET</div><div style="font-size:11px;color:var(--text-3);margin-top:2px">${calSource}</div></div>
+      <div><div style="font-family:var(--f-serif);font-size:28px;color:var(--brown);font-weight:700">${macros.protein}g</div><div style="font-size:12px;color:var(--text-2);margin-top:4px;letter-spacing:.6px;font-weight:500">PROTEIN (${macros.proteinPct}%)</div></div>
+      <div><div style="font-family:var(--f-serif);font-size:28px;color:var(--green);font-weight:700">${macros.carbs}g</div><div style="font-size:12px;color:var(--text-2);margin-top:4px;letter-spacing:.6px;font-weight:500">CARBS (${macros.carbsPct}%)</div></div>
+      <div><div style="font-family:var(--f-serif);font-size:28px;color:var(--amber);font-weight:700">${macros.fat}g</div><div style="font-size:12px;color:var(--text-2);margin-top:4px;letter-spacing:.6px;font-weight:500">FAT (${macros.fatPct}%)</div></div>`;
   }
   ['n-protein','n-carbs','n-fat'].forEach(id=>{
     const el=document.getElementById(id);
@@ -1472,6 +1618,12 @@ function eHTML(e){
     badge='<span class="log-type" style="color:#3DC48A">fasting</span>';
     summary=e.duration+'h fast';
     sub=e.startTime+' → '+e.endTime+(e.metTarget?' · ✓ hit target':'');
+  } else if(e.type==='steps'){
+    badge='<span class="log-type" style="color:var(--green)">steps</span>';
+    const target=getStepsTarget();
+    const pct=Math.round(e.steps/target*100);
+    summary=e.steps.toLocaleString()+' steps';
+    sub=pct+'% of '+target.toLocaleString()+' target'+(e.steps>=target?' · ✓ goal hit':'');
   }
   return`<div class="log-entry">
     <div class="log-entry-inner">
@@ -1683,6 +1835,7 @@ async function syncToGitHub(){
       {path:'health/nutrition.json',   content:build('nutrition',{tdee:calcTDEE(p),target_calories:calcTarget(p),protein_target:calcProteinTarget(p)})},
       {path:'health/body-composition.json', content:build('body_composition',{source:'renpho'})},
       {path:'health/fasting.json',     content:build('fast',{default_protocol:getIfSettings().protocol})},
+      {path:'health/steps.json',        content:build('steps',{target:getStepsTarget()})},
     ];
     for(const f of filesToSync){
       await push(p, f.path, f.content);
@@ -1743,7 +1896,78 @@ function openSettings(){
   document.getElementById('cfg-wunit').value=p.wunit||'lbs';
   document.getElementById('cfg-activity').value=p.activity||'1.55';
   document.getElementById('cfg-worker').value=DB.get('worker_url','')||'';
+  document.getElementById('cfg-steps-target').value=getStepsTarget();
+
+  // Nutrition goals
+  const goals=getNutritionGoals();
+  document.getElementById('cfg-cal-target').value=goals.calTarget||'';
+  document.getElementById('cfg-protein-pct').value=goals.proteinPct;
+  document.getElementById('cfg-carbs-pct').value=goals.carbsPct;
+  document.getElementById('cfg-fat-pct').value=goals.fatPct;
+  // Wire calorie input to live gram preview
+  const calInput=document.getElementById('cfg-cal-target');
+  if(calInput&&!calInput._wired){
+    calInput.addEventListener('input',updateMacroLabels);
+    calInput._wired=true;
+  }
+  updateMacroLabels();
   openModal('settings-modal');
+}
+
+function getNutritionGoals(){
+  const p=getProfile()||{};
+  return DB.get('nutrition_goals',{
+    calTarget: calcTarget(p)||1800,
+    proteinPct: 35,
+    carbsPct: 40,
+    fatPct: 25
+  });
+}
+
+function onMacroSlider(changed){
+  const p=parseInt(document.getElementById('cfg-protein-pct').value);
+  const ca=parseInt(document.getElementById('cfg-carbs-pct').value);
+  const f=parseInt(document.getElementById('cfg-fat-pct').value);
+  const total=p+ca+f;
+  const diff=total-100;
+  if(diff===0){updateMacroLabels();return;}
+  // Rebalance: adjust the other two proportionally
+  if(changed==='protein'){
+    const ratio=ca/(ca+f)||0.5;
+    document.getElementById('cfg-carbs-pct').value=Math.max(10,Math.round((ca-diff*ratio)/5)*5);
+    document.getElementById('cfg-fat-pct').value=Math.max(10,Math.round((f-diff*(1-ratio))/5)*5);
+  } else if(changed==='carbs'){
+    const ratio=p/(p+f)||0.5;
+    document.getElementById('cfg-protein-pct').value=Math.max(10,Math.round((p-diff*ratio)/5)*5);
+    document.getElementById('cfg-fat-pct').value=Math.max(10,Math.round((f-diff*(1-ratio))/5)*5);
+  } else {
+    const ratio=p/(p+ca)||0.5;
+    document.getElementById('cfg-protein-pct').value=Math.max(10,Math.round((p-diff*ratio)/5)*5);
+    document.getElementById('cfg-carbs-pct').value=Math.max(10,Math.round((ca-diff*(1-ratio))/5)*5);
+  }
+  updateMacroLabels();
+}
+
+function updateMacroLabels(){
+  const p=parseInt(document.getElementById('cfg-protein-pct').value)||35;
+  const ca=parseInt(document.getElementById('cfg-carbs-pct').value)||40;
+  const f=parseInt(document.getElementById('cfg-fat-pct').value)||25;
+  const calTarget=parseInt(document.getElementById('cfg-cal-target').value)||
+    calcTarget(getProfile()||{})||1800;
+
+  document.getElementById('cfg-protein-pct-label').textContent=p+'%';
+  document.getElementById('cfg-carbs-pct-label').textContent=ca+'%';
+  document.getElementById('cfg-fat-pct-label').textContent=f+'%';
+
+  // Gram calculations
+  document.getElementById('cfg-protein-g').textContent=Math.round(calTarget*p/100/4)+'g';
+  document.getElementById('cfg-carbs-g').textContent=Math.round(calTarget*ca/100/4)+'g';
+  document.getElementById('cfg-fat-g').textContent=Math.round(calTarget*f/100/9)+'g';
+
+  // Warn if doesn't add to 100
+  const total=p+ca+f;
+  const preview=document.getElementById('macro-gram-preview');
+  if(preview) preview.style.opacity=total===100?'1':'0.5';
 }
 function saveSettings(){
   const p=getProfile()||{};
@@ -1751,7 +1975,18 @@ function saveSettings(){
   DB.set('profile',p);
   const workerUrl=document.getElementById('cfg-worker').value.trim();
   if(workerUrl) DB.set('worker_url',workerUrl);
-  closeModal('settings-modal');toast('Saved','success');renderToday();
+
+  const stepsTarget=parseInt(document.getElementById('cfg-steps-target').value)||10000;
+  DB.set('steps_target', stepsTarget);
+
+  // Save nutrition goals
+  const calTarget=parseInt(document.getElementById('cfg-cal-target').value)||null;
+  const proteinPct=parseInt(document.getElementById('cfg-protein-pct').value)||35;
+  const carbsPct=parseInt(document.getElementById('cfg-carbs-pct').value)||40;
+  const fatPct=parseInt(document.getElementById('cfg-fat-pct').value)||25;
+  DB.set('nutrition_goals',{calTarget,proteinPct,carbsPct,fatPct});
+
+  closeModal('settings-modal');toast('Saved','success');renderToday();renderNutritionTab();
 }
 function resetSetup(){DB.set('setup_done',false);closeModal('settings-modal');document.getElementById('setup-screen').style.display='flex';document.getElementById('app').style.display='none';}
 
@@ -1769,6 +2004,7 @@ async function pullFromGitHub(){
     {path:'health/nutrition.json',  type:'nutrition'},
     {path:'health/body-composition.json', type:'body_composition'},
     {path:'health/fasting.json',    type:'fast'},
+    {path:'health/steps.json',      type:'steps'},
   ];
 
   let totalMerged=0;
