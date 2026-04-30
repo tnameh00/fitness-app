@@ -97,6 +97,31 @@ Consider last workout (${lastWorkout}), streak (${streak} days), weekly deficit 
 Tell them: yes or no on training today, what type/duration, how it affects their weekly deficit. Max 3 sentences.`;
   }
 
+  if (type === 'weekly_analysis') {
+    const extra = `
+ADDITIONAL WEEKLY DATA:
+- Workouts this week: ${ctx.week_workouts || 0}
+- Average steps/day: ${ctx.avg_steps || 'not tracked'}
+- Steps target: ${ctx.steps_target || 10000}
+- Average fasting hours: ${ctx.avg_fast_hrs || 'not tracked'}
+- Protein hit rate: ${ctx.protein_hit_rate !== null ? ctx.protein_hit_rate + '%' : 'unknown'}
+- Protein target: ${ctx.protein_target || 0}g/day
+- Month projected loss: ${ctx.month_projected_lbs || 0} lbs
+- Key signals: ${ctx.signals_summary || 'none'}`;
+
+    return `${contextBlock}
+${extra}
+
+The user wants a comprehensive weekly review and action plan.
+
+Provide:
+1. A honest assessment of this week (2-3 sentences) — what worked, what didn't
+2. The single most important thing to fix next week
+3. Three specific, actionable recommendations for next week (numbered)
+
+Be direct and data-driven. Use their actual numbers. Max 200 words total.`;
+  }
+
   return `${contextBlock}\n\nUser: ${ctx.user_message || 'Give me advice.'}\n\nRespond with specific, data-driven advice. Max 4 sentences.`;
 }
 
@@ -170,7 +195,7 @@ export default {
           },
           body: JSON.stringify({
             model: 'claude-haiku-4-5-20251001',
-            max_tokens: 300,
+            max_tokens: type === 'weekly_analysis' ? 600 : 300,
             system: COACH_SYSTEM,
             messages: [{ role: 'user', content: buildCoachPrompt(type, context) }],
           }),

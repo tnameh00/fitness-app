@@ -169,7 +169,36 @@
 
     select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%239C8974' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:36px !important}
 
-    /* ── TODAY GLANCE ── */
+    /* ── TODAY REDESIGN ── */
+    .today-greeting{display:flex;justify-content:space-between;align-items:flex-start;padding:14px 16px 10px;border-bottom:1px solid var(--border)}
+    .today-date{font-size:12px;letter-spacing:1px;text-transform:uppercase;color:var(--text-3);font-weight:500;margin-bottom:3px}
+    .today-streak{font-size:13px;color:var(--brown);font-weight:600}
+    .today-week-mini{text-align:right}
+    .today-deficit-card{margin:0 14px 0;background:var(--surface);border-radius:var(--r);border:1px solid var(--border);overflow:hidden;margin-top:10px}
+    .today-deficit-row{display:flex;align-items:baseline;gap:8px;padding:16px 14px 4px}
+    .today-deficit-num{font-family:var(--f-serif);font-size:52px;line-height:1;font-weight:700;color:var(--text-1)}
+    .today-deficit-unit{font-size:14px;color:var(--text-2)}
+    .today-deficit-sub{font-size:13px;color:var(--text-2);line-height:1.5;padding:0 14px 12px}
+    .today-pill-row{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border-top:1px solid var(--border)}
+    .today-pill{background:var(--surface);padding:10px 8px 6px;text-align:center;cursor:pointer;position:relative;transition:background .12s}
+    .today-pill:active{background:var(--surface-2)}
+    .today-pill-val{font-family:var(--f-serif);font-size:18px;font-weight:700;color:var(--text-1);line-height:1.2;margin-bottom:2px}
+    .today-pill-lbl{font-size:10px;letter-spacing:.6px;text-transform:uppercase;color:var(--text-3);font-weight:500}
+
+    /* signals */
+    .signal{display:flex;align-items:flex-start;gap:12px;padding:12px 14px;border-bottom:1px solid var(--border)}
+    .signal:last-child{border-bottom:none}
+    .signal-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:5px}
+    .signal-dot.green{background:var(--green)}
+    .signal-dot.amber{background:var(--amber)}
+    .signal-dot.red{background:var(--red)}
+    .signal-dot.blue{background:#5B8DEF}
+    .signal-body{flex:1}
+    .signal-title{font-size:14px;font-weight:600;color:var(--text-1);margin-bottom:2px}
+    .signal-sub{font-size:13px;color:var(--text-2);line-height:1.5}
+    .signal-action{font-size:12px;color:var(--brown);font-weight:600;margin-top:4px;cursor:pointer}
+
+    /* ── TODAY REDESIGN ── */
     .today-glance{margin:10px 14px;background:var(--surface);border-radius:var(--r);border:1px solid var(--border);overflow:hidden}
     .today-headline{padding:16px 14px 12px;border-bottom:1px solid var(--border)}
     .today-date{font-size:12px;letter-spacing:1px;text-transform:uppercase;color:var(--text-3);margin-bottom:6px;font-weight:500}
@@ -338,213 +367,151 @@
     <!-- TODAY -->
     <div class="tab-panel active" id="panel-today">
 
-      <!-- ── ZONE 1: TODAY AT A GLANCE ── -->
-      <div class="today-glance">
-
-        <!-- Date + deficit headline -->
-        <div class="today-headline">
+      <!-- ── GREETING + STREAK ── -->
+      <div class="today-greeting">
+        <div>
           <div id="today-date-label" class="today-date"></div>
-          <div class="today-deficit-row">
-            <span class="today-deficit-num" id="hero-deficit">—</span>
-            <span class="today-deficit-unit">cal deficit</span>
-          </div>
-          <div class="today-deficit-sub" id="hero-label">log calories to see your deficit</div>
+          <div class="today-streak" id="today-streak-label"></div>
         </div>
-
-        <!-- Three pillars: calories / activity / fasting -->
-        <div class="today-pillars">
-
-          <!-- Calories -->
-          <div class="pillar" id="pillar-calories" onclick="switchTabByName('nutrition')">
-            <div class="pillar-icon">🍽</div>
-            <div class="pillar-body">
-              <div class="pillar-label">Calories</div>
-              <div class="pillar-value" id="pillar-cal-val">—</div>
-              <div class="pillar-sub" id="pillar-cal-sub">not logged</div>
-            </div>
-            <div class="pillar-bar-wrap"><div class="pillar-bar" id="pillar-cal-bar" style="width:0%"></div></div>
-          </div>
-
-          <!-- Activity -->
-          <div class="pillar" id="pillar-activity" onclick="switchTabByName('workouts')">
-            <div class="pillar-icon">⚡</div>
-            <div class="pillar-body">
-              <div class="pillar-label">Activity</div>
-              <div class="pillar-value" id="pillar-act-val">—</div>
-              <div class="pillar-sub" id="pillar-act-sub">no workout today</div>
-            </div>
-            <div class="pillar-bar-wrap"><div class="pillar-bar pillar-bar-green" id="pillar-act-bar" style="width:0%"></div></div>
-          </div>
-
-          <!-- Fasting -->
-          <div class="pillar" id="pillar-fasting" onclick="switchTabByName('fasting')">
-            <div class="pillar-icon">⏱</div>
-            <div class="pillar-body">
-              <div class="pillar-label">Fasting</div>
-              <div class="pillar-value" id="pillar-fast-val">—</div>
-              <div class="pillar-sub" id="pillar-fast-sub">tap to start</div>
-            </div>
-            <div class="pillar-bar-wrap"><div class="pillar-bar pillar-bar-amber" id="pillar-fast-bar" style="width:0%"></div></div>
-          </div>
-
-          <!-- Steps pillar -->
-          <div class="pillar" id="pillar-steps">
-            <div class="pillar-icon">👟</div>
-            <div class="pillar-body">
-              <div class="pillar-label">Steps</div>
-              <div class="pillar-value" id="pillar-steps-val">—</div>
-              <div class="pillar-sub" id="pillar-steps-sub">target: 10,000</div>
-            </div>
-            <div class="pillar-bar-wrap"><div class="pillar-bar" id="pillar-steps-bar" style="width:0%;background:var(--green)"></div></div>
-          </div>
-        </div>
-
-        <!-- Week progress bar -->
-        <div class="today-week-wrap">
-          <div class="prog-track"><div class="prog-fill" id="week-prog" style="width:0%"></div></div>
-          <div class="prog-labels">
-            <span id="week-so-far">0 cal this week</span>
-            <span id="week-goal-lbl">goal: 3,500</span>
+        <div class="today-week-mini">
+          <div class="prog-track" style="width:120px"><div class="prog-fill" id="week-prog" style="width:0%"></div></div>
+          <div style="font-size:11px;color:var(--text-3);margin-top:3px;text-align:right">
+            <span id="week-so-far">0</span> / <span id="week-goal-lbl">3,500</span> cal
           </div>
         </div>
       </div>
 
-      <!-- ── ZONE 2: QUICK LOG ── -->
-      <div class="sec-label">LOG TODAY</div>
+      <!-- ── DEFICIT HERO ── -->
+      <div class="today-deficit-card">
+        <div class="today-deficit-row">
+          <span class="today-deficit-num" id="hero-deficit">—</span>
+          <span class="today-deficit-unit">cal deficit today</span>
+        </div>
+        <div class="today-deficit-sub" id="hero-label">log calories to see your deficit</div>
+        <!-- 4 pillars inline -->
+        <div class="today-pill-row">
+          <div class="today-pill" onclick="switchTabByName('nutrition')">
+            <div class="today-pill-val" id="pillar-cal-val">—</div>
+            <div class="today-pill-lbl">eaten</div>
+            <div class="pillar-bar-wrap"><div class="pillar-bar" id="pillar-cal-bar" style="width:0%"></div></div>
+          </div>
+          <div class="today-pill" onclick="switchTabByName('workouts')">
+            <div class="today-pill-val" id="pillar-act-val">—</div>
+            <div class="today-pill-lbl">burned</div>
+            <div class="pillar-bar-wrap"><div class="pillar-bar pillar-bar-green" id="pillar-act-bar" style="width:0%"></div></div>
+          </div>
+          <div class="today-pill" onclick="switchTabByName('fasting')">
+            <div class="today-pill-val" id="pillar-fast-val">—</div>
+            <div class="today-pill-lbl">fasting</div>
+            <div class="pillar-bar-wrap"><div class="pillar-bar pillar-bar-amber" id="pillar-fast-bar" style="width:0%"></div></div>
+          </div>
+          <div class="today-pill" onclick="switchTabByName('workouts')">
+            <div class="today-pill-val" id="pillar-steps-val">—</div>
+            <div class="today-pill-lbl">steps</div>
+            <div class="pillar-bar-wrap"><div class="pillar-bar" id="pillar-steps-bar" style="width:0%;background:var(--green)"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── SIGNALS ── -->
+      <div class="sec-label">SIGNALS</div>
+      <div class="card" id="signals-card">
+        <div id="signals-list">
+          <div class="empty"><p>Signals load after you have a few days of data.</p></div>
+        </div>
+        <!-- Today's focus -->
+        <div id="focus-wrap" style="display:none;padding:12px 14px;border-top:1px solid var(--border);background:rgba(224,123,46,0.06)">
+          <div style="font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--brown);font-weight:600;margin-bottom:6px">TODAY'S FOCUS</div>
+          <div id="focus-text" style="font-size:15px;color:var(--text-1);line-height:1.6;font-family:var(--f-serif)"></div>
+        </div>
+      </div>
+
+      <!-- ── AI WEEKLY ANALYSIS ── -->
+      <div class="sec-label">AI ANALYSIS</div>
+      <div class="card" id="ai-analysis-card">
+        <div class="card-body" id="ai-analysis-body">
+          <button class="btn btn-ghost" id="ai-analyze-btn" onclick="runWeeklyAnalysis()" style="font-size:14px;border-color:var(--brown);color:var(--brown)">
+            ✦ Analyze my week
+          </button>
+          <div style="font-size:12px;color:var(--text-3);text-align:center;margin-top:6px">Uses AI · cached daily</div>
+        </div>
+        <div id="ai-analysis-result" style="display:none;padding:14px">
+          <div style="font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--text-3);font-weight:500;margin-bottom:10px" id="ai-analysis-date"></div>
+          <div style="font-size:15px;line-height:1.8;color:var(--text-1);font-family:var(--f-serif)" id="ai-analysis-text"></div>
+          <button class="btn btn-ghost" onclick="refreshWeeklyAnalysis()" style="margin-top:12px;font-size:12px">↻ Refresh</button>
+        </div>
+      </div>
+
+      <!-- ── QUICK LOG (compact, below fold) ── -->
+      <div class="sec-label">QUICK LOG</div>
       <div class="card">
         <div class="card-body">
-          <!-- Steps row -->
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--border)">
-            <div style="flex:1">
-              <label>Steps today <span id="today-steps-meta" style="color:var(--text-3);font-weight:400;text-transform:none;letter-spacing:0;font-size:12px"></span></label>
-              <div style="display:flex;gap:6px;margin-top:4px">
-                <input type="number" id="q-steps" inputmode="numeric" placeholder="10,000" class="input-lg" style="flex:1"/>
-              </div>
-            </div>
-            <button class="btn btn-primary" onclick="saveSteps()" style="width:auto;padding:12px 16px;align-self:flex-end;font-size:13px;margin-top:0;background:var(--green)">Log</button>
-          </div>
-          <!-- Weight row -->
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--border)">
+          <div style="display:flex;gap:8px;margin-bottom:10px">
             <div style="flex:1">
               <label>Weight <span id="today-w-meta" style="color:var(--text-3);font-weight:400;text-transform:none;letter-spacing:0;font-size:12px"></span></label>
               <div style="display:flex;gap:6px;margin-top:4px">
                 <input type="number" id="q-weight" inputmode="decimal" placeholder="198" class="input-lg" step="0.1" style="flex:1"/>
                 <select id="q-wunit" style="width:72px;font-size:14px"><option value="lbs">lbs</option><option value="kg">kg</option></select>
+                <button class="btn btn-primary" onclick="saveQuickWeight()" style="width:auto;padding:12px 14px;font-size:13px">Log</button>
               </div>
             </div>
-            <button class="btn btn-primary" onclick="saveQuickWeight()" style="width:auto;padding:12px 16px;align-self:flex-end;font-size:13px;margin-top:0">Log</button>
           </div>
-          <!-- Calories row -->
-          <label>Calories eaten today</label>
-          <div style="display:flex;gap:6px;margin-top:4px;margin-bottom:10px">
-            <input type="number" id="q-cals" inputmode="numeric" placeholder="1,800" class="input-lg" style="flex:1"/>
-            <button class="btn btn-green" onclick="saveCalories()" style="width:auto;padding:12px 16px;font-size:13px">Log</button>
+          <div style="display:flex;gap:8px;margin-bottom:10px">
+            <div style="flex:1">
+              <label>Calories eaten <span id="today-cal-meta" style="color:var(--text-3);font-weight:400;text-transform:none;letter-spacing:0;font-size:12px"></span></label>
+              <div style="display:flex;gap:6px;margin-top:4px">
+                <input type="number" id="q-cals" inputmode="numeric" placeholder="1,800" class="input-lg" style="flex:1"/>
+                <button class="btn btn-green" onclick="saveCalories()" style="width:auto;padding:12px 14px;font-size:13px">Log</button>
+              </div>
+            </div>
           </div>
-          <!-- Macros (collapsible) -->
-          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:4px">
-            <div class="macro-cell"><div class="macro-lbl">Protein g</div><input class="macro-input" type="number" id="q-protein" inputmode="numeric" placeholder="150"/><div class="macro-hint" id="q-ptarget">target —</div></div>
-            <div class="macro-cell"><div class="macro-lbl">Carbs g</div><input class="macro-input" type="number" id="q-carbs" inputmode="numeric" placeholder="180"/><div class="macro-hint">4 cal/g</div></div>
-            <div class="macro-cell"><div class="macro-lbl">Fat g</div><input class="macro-input" type="number" id="q-fat" inputmode="numeric" placeholder="60"/><div class="macro-hint">9 cal/g</div></div>
+          <div style="display:flex;gap:8px;margin-bottom:4px">
+            <div style="flex:1">
+              <label>Steps <span id="today-steps-meta" style="color:var(--text-3);font-weight:400;text-transform:none;letter-spacing:0;font-size:12px"></span></label>
+              <div style="display:flex;gap:6px;margin-top:4px">
+                <input type="number" id="q-steps" inputmode="numeric" placeholder="10,000" class="input-lg" style="flex:1"/>
+                <button class="btn btn-primary" onclick="saveSteps()" style="width:auto;padding:12px 14px;font-size:13px;background:var(--green)">Log</button>
+              </div>
+            </div>
           </div>
-          <div class="protein-row" id="q-pbar" style="display:none">
-            <span class="protein-lbl">Protein</span>
-            <div class="protein-track"><div class="protein-fill" id="q-pfill" style="width:0%"></div></div>
-            <span class="protein-pct" id="q-ppct">0%</span>
+          <!-- Macros -->
+          <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
+            <label style="margin-bottom:6px;display:block">Macros <span style="color:var(--text-3);font-weight:400;text-transform:none;letter-spacing:0;font-size:12px" id="q-ptarget"></span></label>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px">
+              <div class="macro-cell"><div class="macro-lbl">Protein g</div><input class="macro-input" type="number" id="q-protein" inputmode="numeric" placeholder="150"/></div>
+              <div class="macro-cell"><div class="macro-lbl">Carbs g</div><input class="macro-input" type="number" id="q-carbs" inputmode="numeric" placeholder="180"/></div>
+              <div class="macro-cell"><div class="macro-lbl">Fat g</div><input class="macro-input" type="number" id="q-fat" inputmode="numeric" placeholder="60"/></div>
+            </div>
+            <div class="protein-row" id="q-pbar" style="display:none;margin-top:8px">
+              <span class="protein-lbl">Protein</span>
+              <div class="protein-track"><div class="protein-fill" id="q-pfill" style="width:0%"></div></div>
+              <span class="protein-pct" id="q-ppct">0%</span>
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- ── ZONE 3: WEEKLY SUMMARY ── -->
+      <!-- ── WEEKLY NUMBERS ── -->
       <div class="sec-label">THIS WEEK</div>
       <div class="card">
-        <div class="card-body" style="padding:0">
-          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border)">
-            <div class="wstat"><div class="wstat-val" id="ws-avg">—</div><div class="wstat-lbl">avg deficit</div></div>
-            <div class="wstat"><div class="wstat-val" id="ws-proj">—</div><div class="wstat-lbl">proj lbs/wk</div></div>
-            <div class="wstat"><div class="wstat-val" id="ws-prot">—</div><div class="wstat-lbl">protein %</div></div>
-          </div>
-          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);border-top:1px solid var(--border)">
-            <div class="wstat"><div class="wstat-val" id="cum-week-lbs">—</div><div class="wstat-lbl">this week</div></div>
-            <div class="wstat"><div class="wstat-val" id="cum-month-lbs">—</div><div class="wstat-lbl">this month</div></div>
-            <div class="wstat"><div class="wstat-val" id="cum-total-lbs">—</div><div class="wstat-lbl">all time</div></div>
-          </div>
-          <div style="padding:10px 14px;border-top:1px solid var(--border);font-size:13px;color:var(--text-2);line-height:1.6" id="cum-insight"></div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border)">
+          <div class="wstat"><div class="wstat-val" id="ws-avg">—</div><div class="wstat-lbl">avg deficit</div></div>
+          <div class="wstat"><div class="wstat-val" id="ws-proj">—</div><div class="wstat-lbl">proj lbs/wk</div></div>
+          <div class="wstat"><div class="wstat-val" id="ws-prot">—</div><div class="wstat-lbl">protein %</div></div>
         </div>
-      </div>
-
-      <!-- ── ZONE 4: AI COACH ── -->
-      <div class="sec-label">AI COACH</div>
-      <div class="card" id="ai-card">
-        <div class="card-body">
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
-            <button class="ai-btn" id="btn-brief" onclick="runAI('brief')">
-              <div class="ai-btn-icon">◉</div>
-              <div class="ai-btn-label">Today's Brief</div>
-              <div class="ai-btn-sub">where you stand</div>
-            </button>
-            <button class="ai-btn" id="btn-rescue" onclick="runAI('meal_rescue')">
-              <div class="ai-btn-icon">⬡</div>
-              <div class="ai-btn-label">Meal Rescue</div>
-              <div class="ai-btn-sub">what to eat next</div>
-            </button>
-          </div>
-          <button class="ai-btn ai-btn-wide" id="btn-workout" onclick="runAI('workout')">
-            <div style="display:flex;align-items:center;gap:10px">
-              <span class="ai-btn-icon">▲</span>
-              <span><div class="ai-btn-label">Workout Now?</div><div class="ai-btn-sub">should I train today</div></span>
-            </div>
-          </button>
-          <div id="ai-response" style="display:none">
-            <div style="height:1px;background:var(--border);margin:12px 0"></div>
-            <div id="ai-response-type" style="font-size:12px;letter-spacing:1px;text-transform:uppercase;color:var(--text-2);margin-bottom:10px;font-weight:500"></div>
-            <div id="ai-response-text" style="font-size:15px;line-height:1.7;color:var(--text-1);font-family:var(--f-sans)"></div>
-            <div id="ai-meal-input" style="display:none;margin-top:12px">
-              <div style="display:flex;gap:8px">
-                <input type="text" id="meal-msg" placeholder="e.g. had McD burger for lunch..." style="flex:1;font-size:13px"/>
-                <button class="btn btn-green" style="width:auto;padding:11px 16px;font-size:13px" onclick="runAI('meal_rescue')">Ask</button>
-              </div>
-            </div>
-          </div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);border-top:1px solid var(--border)">
+          <div class="wstat"><div class="wstat-val" id="cum-week-lbs">—</div><div class="wstat-lbl">this week</div></div>
+          <div class="wstat"><div class="wstat-val" id="cum-month-lbs">—</div><div class="wstat-lbl">this month</div></div>
+          <div class="wstat"><div class="wstat-val" id="cum-total-lbs">—</div><div class="wstat-lbl">all time</div></div>
         </div>
-      </div>
-
-      <div class="sec-label">QUICK LOG — CALORIES</div>
-      <div class="card">
-        <div class="card-body">
-          <div class="form-row">
-            <div class="form-group"><label>Total calories eaten</label><input type="number" id="q-cals" inputmode="numeric" placeholder="1,800" class="input-lg"/></div>
-          </div>
-          <div class="macro-row">
-            <div class="macro-cell"><div class="macro-lbl">Protein g</div><input class="macro-input" type="number" id="q-protein" inputmode="numeric" placeholder="150"/><div class="macro-hint" id="q-ptarget">target —</div></div>
-            <div class="macro-cell"><div class="macro-lbl">Carbs g</div><input class="macro-input" type="number" id="q-carbs" inputmode="numeric" placeholder="180"/><div class="macro-hint">4 cal/g</div></div>
-            <div class="macro-cell"><div class="macro-lbl">Fat g</div><input class="macro-input" type="number" id="q-fat" inputmode="numeric" placeholder="60"/><div class="macro-hint">9 cal/g</div></div>
-          </div>
-          <div class="protein-row" id="q-pbar" style="display:none">
-            <span class="protein-lbl">Protein</span>
-            <div class="protein-track"><div class="protein-fill" id="q-pfill" style="width:0%"></div></div>
-            <span class="protein-pct" id="q-ppct">0%</span>
-          </div>
-          <button class="btn btn-green" onclick="saveCalories()" style="margin-top:10px">Log nutrition</button>
-        </div>
-      </div>
-
-      <div class="sec-label">QUICK LOG — WEIGHT</div>
-      <div class="card">
-        <div class="card-hd"><span class="card-title">Body weight</span><span class="card-meta" id="today-w-meta">—</span></div>
-        <div class="card-body">
-          <div class="form-row">
-            <div class="form-group"><input type="number" id="q-weight" inputmode="decimal" placeholder="185.0" class="input-lg" step="0.1"/></div>
-            <div class="form-group" style="max-width:80px"><label>Unit</label><select id="q-wunit"><option value="lbs">lbs</option><option value="kg">kg</option></select></div>
-          </div>
-          <button class="btn btn-primary" onclick="saveQuickWeight()">Log weight</button>
-        </div>
+        <div style="padding:10px 14px;border-top:1px solid var(--border);font-size:13px;color:var(--text-2);line-height:1.6" id="cum-insight"></div>
       </div>
 
       <div class="sec-label">TODAY'S ENTRIES</div>
-      <div id="today-list"><div class="empty"><p>Nothing logged yet.<br>Start with calories + weight above.</p></div></div>
+      <div id="today-list"><div class="empty"><p>Nothing logged yet.</p></div></div>
     </div>
 
-    <!-- WEIGHT -->
+        <!-- WEIGHT -->
     <div class="tab-panel" id="panel-weight">
       <div class="sec-label">30-DAY TREND</div>
       <div class="card">
@@ -1062,7 +1029,7 @@ function updatePreview(){
 // ── ENTRIES ──
 function getEntries(){return DB.get('entries',[])}
 function setEntries(a){DB.set('entries',a)}
-function addEntry(e){const a=getEntries();a.unshift({id:Date.now().toString(),sv:SV,...e});setEntries(a);return a}
+function addEntry(e){const a=getEntries();a.unshift({id:Date.now().toString(),sv:SV,...e});setEntries(a);clearAnalysisCache();return a}
 function byType(type,maxDays){
   return getEntries().filter(e=>{
     if(e.type!==type)return false;
@@ -1200,6 +1167,234 @@ function getWeekData(){
 }
 
 // ── RENDER TODAY ──
+// ══════════════════════════════════════════
+//  SIGNALS ENGINE (rule-based intelligence)
+// ══════════════════════════════════════════
+function computeSignals(){
+  const p=getProfile(); if(!p) return [];
+  const all=getEntries();
+  const tdee=calcTDEE(p);
+  const target=calcTarget(p);
+  const today=todayStr();
+  const signals=[];
+
+  // ── Weight trend ──
+  const weights=byType('weight').sort((a,b)=>a.date.localeCompare(b.date));
+  if(weights.length>=5){
+    const recent7=weights.filter(e=>daysAgo(e.date)<7);
+    const recent14=weights.filter(e=>daysAgo(e.date)<14);
+    if(recent7.length>=2){
+      const first=recent7[0].value, last=recent7[recent7.length-1].value;
+      const delta=last-first;
+      if(delta<=-0.5) signals.push({color:'green',title:`Down ${Math.abs(delta.toFixed(1))} ${recent7[0].unit} this week`,sub:'Your deficit is working. Keep the consistency.',priority:1});
+      else if(delta>0.5) signals.push({color:'amber',title:`Up ${delta.toFixed(1)} ${recent7[0].unit} this week`,sub:'Could be water retention or a surplus. Check your calorie logs.',priority:2});
+      else if(recent14.length>=5){
+        // Plateau check — 14 days flat
+        const firstR=recent14[0].value, lastR=recent14[recent14.length-1].value;
+        if(Math.abs(lastR-firstR)<0.5) signals.push({color:'amber',title:'Weight plateau — 14 days flat',sub:'Try a higher deficit day, more protein, or a short diet break.',priority:3});
+      }
+    }
+    // Days since last weigh-in
+    const lastW=weights[weights.length-1];
+    const daysSinceW=daysAgo(lastW.date);
+    if(daysSinceW>=2) signals.push({color:'amber',title:`No weigh-in for ${daysSinceW} days`,sub:'Daily morning weight gives you the most accurate trend.',priority:4});
+  } else if(weights.length<3){
+    signals.push({color:'blue',title:'Log your weight daily',sub:'You need at least 5 entries to see a reliable trend.',priority:10});
+  }
+
+  // ── Calorie deficit pace ──
+  const week=getPeriodData(7);
+  const wgoal=(p.deficitPerDay||500)*7;
+  if(week.loggedDays>=3){
+    const pace=week.total/week.loggedDays;
+    if(pace<p.deficitPerDay*0.5) signals.push({color:'red',title:'Deficit pace well below target',sub:`Avg ${Math.round(pace)} cal/day vs ${p.deficitPerDay} target. Check if calories are being logged accurately.`,priority:2});
+    else if(pace>p.deficitPerDay*1.5) signals.push({color:'amber',title:'Deficit is aggressive this week',sub:`Avg ${Math.round(pace)} cal/day — too large a deficit can cause muscle loss. Consider a rest day at maintenance.`,priority:5});
+    else if(week.total>wgoal*0.8) signals.push({color:'green',title:`${Math.round(week.total/wgoal*100)}% of weekly goal hit`,sub:`${week.total.toLocaleString()} cal deficit so far. ${Math.round(wgoal-week.total)} more to hit your ${wgoal.toLocaleString()} target.`,priority:1});
+  }
+
+  // ── Today's nutrition ──
+  const todayNt=all.find(e=>e.type==='nutrition'&&e.date===today);
+  if(!todayNt) signals.push({color:'amber',title:'Calories not logged today',sub:'Log your meals to see today\'s deficit.',priority:3,action:'Log now',actionFn:"switchTabByName('nutrition')"});
+  else{
+    const deficit=tdee-todayNt.calories+(all.filter(e=>e.type==='workout'&&e.date===today).reduce((s,e)=>s+(e.calsBurned||0),0));
+    if(deficit<0) signals.push({color:'red',title:`${Math.abs(deficit)} cal surplus today`,sub:'You\'re over your TDEE. The rest of the week will need to compensate.',priority:2});
+  }
+
+  // ── Protein ──
+  const proteinTarget=calcProteinTarget(p);
+  const ntLast7=all.filter(e=>e.type==='nutrition'&&daysAgo(e.date)<7&&e.protein);
+  if(ntLast7.length>=3){
+    const hitDays=ntLast7.filter(e=>e.protein>=proteinTarget*0.9).length;
+    const hitRate=Math.round(hitDays/ntLast7.length*100);
+    if(hitRate<50) signals.push({color:'red',title:`Protein hit rate: ${hitRate}% this week`,sub:`Hitting ${proteinTarget}g/day protects muscle while losing fat. Try adding eggs, Greek yogurt, or chicken.`,priority:2});
+    else if(hitRate>=80) signals.push({color:'green',title:`Protein on track — ${hitRate}% this week`,sub:`Averaging close to your ${proteinTarget}g target. Muscle retention looks good.`,priority:4});
+  }
+
+  // ── Workout frequency ──
+  const workouts=byType('workout').sort((a,b)=>b.date.localeCompare(a.date));
+  if(workouts.length>0){
+    const lastWo=workouts[0];
+    const daysSince=daysAgo(lastWo.date);
+    const workoutsThisWeek=workouts.filter(e=>daysAgo(e.date)<7).length;
+    if(daysSince>=4) signals.push({color:'red',title:`No workout in ${daysSince} days`,sub:`You've been at rest since ${fmtDate(lastWo.date)}. Even a 20-min walk counts.`,priority:2,action:'Log activity',actionFn:"switchTabByName('workouts')"});
+    else if(daysSince>=2&&workoutsThisWeek<2) signals.push({color:'amber',title:`${workoutsThisWeek} workout this week`,sub:'Aim for 3+ sessions to maintain momentum. Next session due today.',priority:3});
+    else if(workoutsThisWeek>=4) signals.push({color:'green',title:`${workoutsThisWeek} workouts this week`,sub:'Strong training consistency. Make sure you have at least one rest day.',priority:4});
+  } else {
+    signals.push({color:'blue',title:'No workouts logged yet',sub:'Log your first session under Activity.',priority:8,action:'Log activity',actionFn:"switchTabByName('workouts')"});
+  }
+
+  // ── Steps ──
+  const stepsTarget=getStepsTarget();
+  const stepsLast7=all.filter(e=>e.type==='steps'&&daysAgo(e.date)<7);
+  if(stepsLast7.length>=3){
+    const avgSteps=Math.round(stepsLast7.reduce((s,e)=>s+e.steps,0)/stepsLast7.length);
+    if(avgSteps<stepsTarget*0.6) signals.push({color:'amber',title:`Avg steps ${avgSteps.toLocaleString()}/day this week`,sub:`Below your ${stepsTarget.toLocaleString()} target. Try a 20-min walk after meals.`,priority:5});
+    else if(avgSteps>=stepsTarget) signals.push({color:'green',title:`Averaging ${avgSteps.toLocaleString()} steps/day`,sub:'Consistently hitting your step goal. Great NEAT activity.',priority:5});
+  }
+
+  // ── Expected vs actual weight loss ──
+  const month=getPeriodData(30);
+  if(month.loggedDays>=10&&weights.filter(e=>daysAgo(e.date)<30).length>=5){
+    const expectedLbs=month.projectedLbs;
+    const wFirst=weights.filter(e=>daysAgo(e.date)<30).sort((a,b)=>a.date.localeCompare(b.date))[0];
+    const wLast=weights.filter(e=>daysAgo(e.date)<30).sort((a,b)=>b.date.localeCompare(a.date))[0];
+    if(wFirst&&wLast){
+      const actualLbs=Math.round((wFirst.value-wLast.value)*10)/10;
+      const gap=Math.round((expectedLbs-actualLbs)*10)/10;
+      if(gap>1.5) signals.push({color:'amber',title:`Expected ${expectedLbs}lb loss, actual ${actualLbs}lb`,sub:'The gap could be water retention, muscle gain, or logging gaps. Keep consistent.',priority:6});
+      else if(actualLbs>0&&actualLbs>=expectedLbs*0.8) signals.push({color:'green',title:`On track — ${actualLbs}lb lost this month`,sub:`Deficit math is working. Projected: ${expectedLbs}lb, actual: ${actualLbs}lb.`,priority:3});
+    }
+  }
+
+  // Sort by priority, return top 4
+  return signals.sort((a,b)=>a.priority-b.priority).slice(0,4);
+}
+
+function renderSignals(){
+  const signals=computeSignals();
+  const list=document.getElementById('signals-list');
+  const focusWrap=document.getElementById('focus-wrap');
+  const focusText=document.getElementById('focus-text');
+  if(!list)return;
+
+  if(!signals.length){
+    list.innerHTML='<div class="empty"><p>Log a few days of data to see signals.</p></div>';
+    if(focusWrap) focusWrap.style.display='none';
+    return;
+  }
+
+  list.innerHTML=signals.map(s=>`
+    <div class="signal">
+      <div class="signal-dot ${s.color}"></div>
+      <div class="signal-body">
+        <div class="signal-title">${s.title}</div>
+        <div class="signal-sub">${s.sub}</div>
+        ${s.action?`<div class="signal-action" onclick="${s.actionFn}">→ ${s.action}</div>`:''}
+      </div>
+    </div>`).join('');
+
+  // Today's focus = highest priority red/amber signal action
+  const focus=signals.find(s=>s.color==='red')||signals.find(s=>s.color==='amber');
+  if(focus&&focusWrap&&focusText){
+    focusText.textContent=focus.title+'. '+focus.sub;
+    focusWrap.style.display='block';
+  } else if(focusWrap){
+    focusWrap.style.display='none';
+  }
+}
+
+// ══════════════════════════════════════════
+//  AI WEEKLY ANALYSIS
+// ══════════════════════════════════════════
+function getAnalysisCache(){return DB.get('ai_analysis_cache',null)}
+function setAnalysisCache(text){
+  DB.set('ai_analysis_cache',{text,date:todayStr(),ts:Date.now()});
+  // Invalidate when data changes — done by clearAnalysisCache() on addEntry/deleteEntry
+}
+function clearAnalysisCache(){DB.set('ai_analysis_cache',null)}
+
+async function runWeeklyAnalysis(){
+  const cached=getAnalysisCache();
+  if(cached&&cached.date===todayStr()){
+    showAnalysisResult(cached.text,cached.date);
+    return;
+  }
+  await fetchWeeklyAnalysis();
+}
+
+async function refreshWeeklyAnalysis(){
+  clearAnalysisCache();
+  await fetchWeeklyAnalysis();
+}
+
+async function fetchWeeklyAnalysis(){
+  const p=getProfile(); if(!p) return;
+  const workerUrl=DB.get('worker_url','')||'';
+  if(!workerUrl||workerUrl.includes('YOUR_SUBDOMAIN')){
+    toast('Set Worker URL in Settings → AI Coach','error'); return;
+  }
+
+  const btn=document.getElementById('ai-analyze-btn');
+  const body=document.getElementById('ai-analysis-body');
+  if(btn){btn.textContent='✦ Analyzing...';btn.disabled=true;}
+
+  // Build rich context for weekly analysis
+  const all=getEntries();
+  const week=getPeriodData(7);
+  const month=getPeriodData(30);
+  const weights=byType('weight').sort((a,b)=>b.date.localeCompare(a.date));
+  const signals=computeSignals();
+  const stepsLast7=all.filter(e=>e.type==='steps'&&daysAgo(e.date)<7);
+  const fastLast7=byType('fast').filter(e=>daysAgo(e.date)<7);
+  const ntLast7=all.filter(e=>e.type==='nutrition'&&daysAgo(e.date)<7);
+  const proteinTarget=calcProteinTarget(p);
+
+  const ctx={
+    tdee:calcTDEE(p),
+    target_calories:calcTarget(p),
+    calories_today:all.find(e=>e.type==='nutrition'&&e.date===todayStr())?.calories||0,
+    week_deficit:week.total,
+    week_target:(p.deficitPerDay||500)*7,
+    days_left_in_week:new Date().getDay()===0?0:7-new Date().getDay(),
+    weight_trend:weights.length>=2?`${weights[0].value} ${weights[0].unit} (${daysAgo(weights[0].date)===0?'today':daysAgo(weights[0].date)+' days ago'})`:'no data',
+    last_workout:byType('workout').sort((a,b)=>b.date.localeCompare(a.date))[0]?.name||'none',
+    streak:0,
+    body_fat_pct:byType('body_composition').sort((a,b)=>b.date.localeCompare(a.date))[0]?.body_fat_pct||null,
+    week_workouts:byType('workout').filter(e=>daysAgo(e.date)<7).length,
+    avg_steps:stepsLast7.length?Math.round(stepsLast7.reduce((s,e)=>s+e.steps,0)/stepsLast7.length):null,
+    steps_target:getStepsTarget(),
+    avg_fast_hrs:fastLast7.length?(fastLast7.reduce((s,e)=>s+(e.duration||0),0)/fastLast7.length).toFixed(1):null,
+    protein_hit_rate:ntLast7.length?Math.round(ntLast7.filter(e=>e.protein>=proteinTarget*0.9).length/ntLast7.length*100):null,
+    protein_target:proteinTarget,
+    month_projected_lbs:month.projectedLbs,
+    signals_summary:signals.map(s=>s.title).join('; '),
+    user_message:'Give me a comprehensive weekly analysis with 3 specific action recommendations for next week.'
+  };
+
+  try{
+    const res=await fetch(workerUrl+'/ai',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:'weekly_analysis',context:ctx})});
+    if(!res.ok){const e=await res.json();throw new Error(e.error||'Worker error');}
+    const data=await res.json();
+    const text=data.response||'No analysis returned';
+    setAnalysisCache(text);
+    showAnalysisResult(text,todayStr());
+  }catch(err){
+    toast('Analysis failed: '+err.message,'error');
+    if(btn){btn.textContent='✦ Analyze my week';btn.disabled=false;}
+  }
+}
+
+function showAnalysisResult(text,date){
+  const body=document.getElementById('ai-analysis-body');
+  const result=document.getElementById('ai-analysis-result');
+  const dateEl=document.getElementById('ai-analysis-date');
+  const textEl=document.getElementById('ai-analysis-text');
+  if(body) body.style.display='none';
+  if(result) result.style.display='block';
+  if(dateEl) dateEl.textContent='Analysis from '+fmtDate(date);
+  if(textEl) textEl.textContent=text;
+}
+
 function renderToday(){
   const p=getProfile();if(!p)return;
   const tdee=calcTDEE(p);const today=todayStr();const all=getEntries();
@@ -1355,6 +1550,40 @@ function renderToday(){
   const todayE=all.filter(e=>e.date===today);
   const tl=document.getElementById('today-list');
   if(tl) tl.innerHTML=todayE.length?todayE.map(eHTML).join(''):'<div class="empty"><p>Nothing logged yet.</p></div>';
+
+  // ── Streak label ──
+  const streakEl=document.getElementById('today-streak-label');
+  if(streakEl){
+    const active=new Set(all.map(e=>e.date));
+    let streak=0,dd=new Date();
+    while(active.has(dd.toISOString().slice(0,10))){streak++;dd.setDate(dd.getDate()-1);}
+    streakEl.textContent=streak>1?'🔥 '+streak+' day streak':streak===1?'Day 1 — keep going':'Start logging to build a streak';
+  }
+
+  // ── Today cal meta ──
+  const calMeta=document.getElementById('today-cal-meta');
+  if(calMeta) calMeta.textContent=nt?'· '+nt.calories.toLocaleString()+' cal logged':'· not logged today';
+
+  // ── Compact pillars (pill row) ──
+  // calories pill
+  const cpv=document.getElementById('pillar-cal-val');
+  const cpb=document.getElementById('pillar-cal-bar');
+  if(cpv){cpv.textContent=nt?nt.calories.toLocaleString():'—';}
+  if(cpb&&nt){cpb.style.width=Math.min(100,Math.round(nt.calories/target*100))+'%';cpb.style.background=nt.calories>target?'var(--red)':'var(--brown)';}
+  // activity pill
+  const apv=document.getElementById('pillar-act-val');
+  const apb=document.getElementById('pillar-act-bar');
+  if(apv){apv.textContent=todayBurned?todayBurned+'cal':'—';}
+  if(apb){apb.style.width=todayBurned?'100%':'0%';}
+
+  // ── Signals ──
+  renderSignals();
+
+  // ── Check if cached analysis exists ──
+  const cached=getAnalysisCache();
+  if(cached&&cached.date===todayStr()){
+    showAnalysisResult(cached.text,cached.date);
+  }
 
   renderCumulative();
 }
@@ -2225,8 +2454,8 @@ function deleteEntry(id){
   if(!confirm('Delete this entry?')) return;
   const arr=getEntries().filter(e=>e.id!==id);
   setEntries(arr);
+  clearAnalysisCache();
   toast('Entry deleted');
-  // Re-render whichever panels are visible
   renderToday();
   const active=document.querySelector('.tab-panel.active');
   if(active){
