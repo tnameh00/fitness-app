@@ -437,58 +437,19 @@
         </div>
         <div id="ai-analysis-result" style="display:none;padding:14px">
           <div style="font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--text-3);font-weight:500;margin-bottom:10px" id="ai-analysis-date"></div>
-          <div style="font-size:15px;line-height:1.8;color:var(--text-1);font-family:var(--f-serif)" id="ai-analysis-text"></div>
+          <div id="ai-analysis-text"></div>
           <button class="btn btn-ghost" onclick="refreshWeeklyAnalysis()" style="margin-top:12px;font-size:12px">↻ Refresh</button>
         </div>
       </div>
 
-      <!-- ── QUICK LOG (compact, below fold) ── -->
-      <div class="sec-label">QUICK LOG</div>
-      <div class="card">
-        <div class="card-body">
-          <div style="display:flex;gap:8px;margin-bottom:10px">
-            <div style="flex:1">
-              <label>Weight <span id="today-w-meta" style="color:var(--text-3);font-weight:400;text-transform:none;letter-spacing:0;font-size:12px"></span></label>
-              <div style="display:flex;gap:6px;margin-top:4px">
-                <input type="number" id="q-weight" inputmode="decimal" placeholder="198" class="input-lg" step="0.1" style="flex:1"/>
-                <select id="q-wunit" style="width:72px;font-size:14px"><option value="lbs">lbs</option><option value="kg">kg</option></select>
-                <button class="btn btn-primary" onclick="saveQuickWeight()" style="width:auto;padding:12px 14px;font-size:13px">Log</button>
-              </div>
-            </div>
-          </div>
-          <div style="display:flex;gap:8px;margin-bottom:10px">
-            <div style="flex:1">
-              <label>Calories eaten <span id="today-cal-meta" style="color:var(--text-3);font-weight:400;text-transform:none;letter-spacing:0;font-size:12px"></span></label>
-              <div style="display:flex;gap:6px;margin-top:4px">
-                <input type="number" id="q-cals" inputmode="numeric" placeholder="1,800" class="input-lg" style="flex:1"/>
-                <button class="btn btn-green" onclick="saveCalories()" style="width:auto;padding:12px 14px;font-size:13px">Log</button>
-              </div>
-            </div>
-          </div>
-          <div style="display:flex;gap:8px;margin-bottom:4px">
-            <div style="flex:1">
-              <label>Steps <span id="today-steps-meta" style="color:var(--text-3);font-weight:400;text-transform:none;letter-spacing:0;font-size:12px"></span></label>
-              <div style="display:flex;gap:6px;margin-top:4px">
-                <input type="number" id="q-steps" inputmode="numeric" placeholder="10,000" class="input-lg" style="flex:1"/>
-                <button class="btn btn-primary" onclick="saveSteps()" style="width:auto;padding:12px 14px;font-size:13px;background:var(--green)">Log</button>
-              </div>
-            </div>
-          </div>
-          <!-- Macros -->
-          <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
-            <label style="margin-bottom:6px;display:block">Macros <span style="color:var(--text-3);font-weight:400;text-transform:none;letter-spacing:0;font-size:12px" id="q-ptarget"></span></label>
-            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px">
-              <div class="macro-cell"><div class="macro-lbl">Protein g</div><input class="macro-input" type="number" id="q-protein" inputmode="numeric" placeholder="150"/></div>
-              <div class="macro-cell"><div class="macro-lbl">Carbs g</div><input class="macro-input" type="number" id="q-carbs" inputmode="numeric" placeholder="180"/></div>
-              <div class="macro-cell"><div class="macro-lbl">Fat g</div><input class="macro-input" type="number" id="q-fat" inputmode="numeric" placeholder="60"/></div>
-            </div>
-            <div class="protein-row" id="q-pbar" style="display:none;margin-top:8px">
-              <span class="protein-lbl">Protein</span>
-              <div class="protein-track"><div class="protein-fill" id="q-pfill" style="width:0%"></div></div>
-              <span class="protein-pct" id="q-ppct">0%</span>
-            </div>
-          </div>
-        </div>
+      <!-- Hidden inputs kept for JS compatibility (logging happens in tabs) -->
+      <div style="display:none">
+        <span id="today-w-meta"></span><span id="today-cal-meta"></span><span id="today-steps-meta"></span>
+        <input id="q-weight"/><select id="q-wunit"><option value="lbs">lbs</option><option value="kg">kg</option></select>
+        <input id="q-cals"/><input id="q-steps"/>
+        <input id="q-protein"/><input id="q-carbs"/><input id="q-fat"/>
+        <span id="q-ptarget"></span>
+        <div id="q-pbar"><div id="q-pfill"></div><span id="q-ppct"></span></div>
       </div>
 
       <!-- ── WEEKLY NUMBERS ── -->
@@ -678,6 +639,20 @@
           <div class="wstat"><div class="wstat-val" id="act-total-cal">—</div><div class="wstat-lbl">cal burned</div></div>
           <div class="wstat"><div class="wstat-val" id="act-total-min">—</div><div class="wstat-lbl">minutes</div></div>
           <div class="wstat"><div class="wstat-val" id="act-active-days">—</div><div class="wstat-lbl">active days</div></div>
+        </div>
+      </div>
+
+      <div class="sec-label">DAILY STEPS</div>
+      <div class="card">
+        <div class="card-hd">
+          <span class="card-title">Steps — 14 days</span>
+          <span class="card-meta" id="steps-week-avg">— avg/day</span>
+        </div>
+        <div style="padding:14px"><canvas id="steps-chart" height="110"></canvas></div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);border-top:1px solid var(--border)">
+          <div class="wstat"><div class="wstat-val" id="steps-avg-val">—</div><div class="wstat-lbl">avg steps</div></div>
+          <div class="wstat"><div class="wstat-val" id="steps-goal-days">—</div><div class="wstat-lbl">goal days</div></div>
+          <div class="wstat"><div class="wstat-val" id="steps-best">—</div><div class="wstat-lbl">best day</div></div>
         </div>
       </div>
 
@@ -1392,7 +1367,31 @@ function showAnalysisResult(text,date){
   if(body) body.style.display='none';
   if(result) result.style.display='block';
   if(dateEl) dateEl.textContent='Analysis from '+fmtDate(date);
-  if(textEl) textEl.textContent=text;
+  if(!textEl) return;
+
+  // Format: split into paragraphs, detect numbered lists
+  const lines=text.split('\n').filter(l=>l.trim());
+  let html='';
+  lines.forEach(line=>{
+    const trimmed=line.trim();
+    // Numbered recommendation: "1." "2." "3."
+    const numMatch=trimmed.match(/^(\d+)\.\s+(.+)/);
+    if(numMatch){
+      html+=`<div style="display:flex;gap:10px;margin-bottom:10px;align-items:flex-start">
+        <span style="font-family:var(--f-serif);font-size:18px;font-weight:700;color:var(--brown);flex-shrink:0;line-height:1.4">${numMatch[1]}</span>
+        <span style="font-size:14px;color:var(--text-1);line-height:1.6">${numMatch[2]}</span>
+      </div>`;
+    }
+    // Bold header lines (contain colon at end or are ALL CAPS short)
+    else if(trimmed.endsWith(':') || (trimmed===trimmed.toUpperCase()&&trimmed.length<40&&trimmed.length>3)){
+      html+=`<div style="font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--brown);font-weight:600;margin:12px 0 6px">${trimmed.replace(':','')}</div>`;
+    }
+    // Regular paragraph
+    else{
+      html+=`<p style="font-size:14px;color:var(--text-1);line-height:1.7;margin-bottom:8px;font-family:var(--f-serif)">${trimmed}</p>`;
+    }
+  });
+  textEl.innerHTML=html;
 }
 
 function renderToday(){
@@ -1514,10 +1513,15 @@ function renderToday(){
   document.getElementById('ws-avg').textContent=wd.avg?wd.avg.toLocaleString()+'cal':'—';
   const proj=wd.avg?(wd.avg*7/3500).toFixed(2):'—';
   document.getElementById('ws-proj').textContent=proj!=='—'?proj+'lb':proj;
-  const ne7=all.filter(e=>e.type==='nutrition'&&daysAgo(e.date)<7&&e.protein);
+  const ne7=all.filter(e=>e.type==='nutrition'&&daysAgo(e.date)<7&&e.protein>0);
   if(ne7.length){
     const ap=ne7.reduce((s,e)=>s+e.protein,0)/ne7.length;
-    document.getElementById('ws-prot').textContent=Math.round(ap/pt*100)+'%';
+    const protPct=Math.round(ap/pt*100);
+    const wsProtEl=document.getElementById('ws-prot');
+    if(wsProtEl){wsProtEl.textContent=protPct+'%';wsProtEl.style.color=protPct>=80?'var(--green)':protPct>=50?'var(--amber)':'var(--red)';}
+  } else {
+    const wsProtEl=document.getElementById('ws-prot');
+    if(wsProtEl){wsProtEl.textContent='—';wsProtEl.style.color='';}
   }
 
   // ── Today weight meta ──
@@ -1844,9 +1848,76 @@ function renderWorkoutTab(){
     return `<div class="log-entry"><div class="log-entry-inner"><div class="log-entry-content"><div class="log-top"><span class="log-type ${['walk','run','cardio','sports'].includes(e.workoutType)?'t-cardio':'t-workout'}">${e.workoutType||'workout'}</span><span class="log-date">${fmtDate(e.date)}</span></div><div class="log-summary">${e.name}${e.duration?' · '+e.duration+' min':''}${e.calsBurned?' · ~'+e.calsBurned+' cal':''}</div>${e.distance?`<div class="log-sub">${e.distance}</div>`:''}</div><button class="delete-btn" onclick="deleteEntry('${e.id}')">×</button></div></div>`;
   }).join(''):'<div class="empty"><p>No activities logged yet.</p></div>';
   drawActivityChart();
+  drawStepsChart();
 }
 
-function drawActivityChart(){
+function drawStepsChart(){
+  const canvas=document.getElementById('steps-chart');
+  if(!canvas)return;
+  try{
+    const target=getStepsTarget();
+    const ctx=canvas.getContext('2d');
+    const W=canvas.parentElement.clientWidth-28;
+    canvas.width=W;canvas.height=110;ctx.clearRect(0,0,W,110);
+
+    const all=getEntries();
+    const days=[];
+    for(let i=13;i>=0;i--){
+      const d=dateNDaysAgo(i);
+      const entry=all.find(e=>e.type==='steps'&&e.date===d);
+      const label=new Date(d+'T12:00:00').toLocaleDateString('en-US',{weekday:'short'}).charAt(0);
+      days.push({date:d,steps:entry?entry.steps:null,label});
+    }
+
+    const maxSteps=Math.max(...days.map(d=>d.steps||0),target*1.2,1);
+    const barW=Math.max(2,Math.floor((W-30)/14)-3);
+    const logged=days.filter(d=>d.steps!==null);
+    const avgSteps=logged.length?Math.round(logged.reduce((s,d)=>s+d.steps,0)/logged.length):null;
+    const goalDays=logged.filter(d=>d.steps>=target).length;
+    const bestDay=logged.length?Math.max(...logged.map(d=>d.steps)):null;
+
+    // Update stats
+    const avgEl=document.getElementById('steps-week-avg');
+    if(avgEl) avgEl.textContent=avgSteps?avgSteps.toLocaleString()+' avg/day':'no data';
+    const avgValEl=document.getElementById('steps-avg-val');
+    if(avgValEl) avgValEl.textContent=avgSteps?avgSteps.toLocaleString():'—';
+    const goalEl=document.getElementById('steps-goal-days');
+    if(goalEl) goalEl.textContent=goalDays+'/'+logged.length;
+    const bestEl=document.getElementById('steps-best');
+    if(bestEl) bestEl.textContent=bestDay?bestDay.toLocaleString():'—';
+
+    // Target line
+    const targetY=90-Math.round((target/maxSteps)*74);
+    ctx.strokeStyle='rgba(61,196,138,0.3)';ctx.lineWidth=1;ctx.setLineDash([4,3]);
+    ctx.beginPath();ctx.moveTo(0,targetY);ctx.lineTo(W,targetY);ctx.stroke();ctx.setLineDash([]);
+    ctx.fillStyle='rgba(61,196,138,0.5)';ctx.font='10px -apple-system,sans-serif';
+    ctx.fillText(target>=1000?(target/1000).toFixed(0)+'k':target,W-22,targetY-4);
+
+    days.forEach((d,i)=>{
+      const x=15+i*(barW+3);
+      const isToday=d.date===todayStr();
+      if(d.steps===null){
+        ctx.fillStyle='rgba(245,239,230,0.04)';
+        ctx.fillRect(x,16,barW,74);
+      } else {
+        const barH=Math.max(3,Math.round((d.steps/maxSteps)*74));
+        const y=90-barH;
+        const hitTarget=d.steps>=target;
+        ctx.fillStyle=isToday?'#3DC48A':hitTarget?'rgba(61,196,138,0.6)':'rgba(224,123,46,0.5)';
+        ctx.fillRect(x,y,barW,barH);
+        if(isToday||hitTarget){
+          ctx.fillStyle=isToday?'#F5EFE6':'rgba(245,239,230,0.6)';
+          ctx.font='bold 9px -apple-system,sans-serif';ctx.textAlign='center';
+          const label=d.steps>=1000?(d.steps/1000).toFixed(1)+'k':d.steps;
+          ctx.fillText(label,x+barW/2,y-3);
+        }
+      }
+      ctx.fillStyle=isToday?'#3DC48A':'rgba(156,137,116,0.7)';
+      ctx.font=(isToday?'bold ':'')+'10px -apple-system,sans-serif';ctx.textAlign='center';
+      ctx.fillText(d.label,x+barW/2,106);
+    });
+  }catch(err){console.error('Steps chart:',err);}
+}
   const canvas=document.getElementById('activity-chart');
   if(!canvas)return;
   try{
@@ -2386,13 +2457,15 @@ async function pullFromGitHub(){
     }
 
     console.log('Pull debug:\n'+debugLog.join('\n'));
-    alert('Pull debug:\n'+debugLog.join('\n'));
 
     if(totalMerged>0){
       toast(`✓ Pulled ${totalMerged} entries from GitHub`,'success');
-      renderToday();renderFastToday();
+      // Full re-render after pull
+      renderToday();renderFastToday();renderWeightTab();
     } else {
-      toast('0 entries pulled — see debug alert','');
+      toast('Nothing new to pull — data already up to date','');
+      // Still re-render in case profile data changed
+      renderToday();
     }
   } catch(err){
     toast('Pull failed: '+err.message,'error');
